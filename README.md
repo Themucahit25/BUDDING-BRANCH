@@ -51,19 +51,31 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
 - Kazım aktifken sahne hızlanır: tüm parıltılar 2-3x hızlanır, sahneye sıcak bir iç ışıma gelir,
   başlat kartı yeşil nabız halkası alır
 
+## Puan ekonomisi (★)
+
+BB'den ayrı ikinci bir birim. Oyunlardan kazanılır, pazar yerinde harcanır:
+
+```
+Oyun oyna  →  ★ puan  →  Pazar yeri yükseltmesi  →  daha yüksek kazım hızı  →  daha çok BB
+```
+
+**Oyun Alanı** — satır başına 3 kutucuk. Yeni oyun eklemek için `js/app.js`
+içindeki `GAMES` dizisine bir satır ve `openGame()` içine bir dal yeter.
+
+- **BB Yağmuru** (hazır) — 60 saniye. Yukarıdan düşen BB sembollerine dokunup topla.
+  Toplanan her BB = `GAME_POINT_PER_BB` puan. Süre ilerledikçe düşme sıklığı ve hızı artar.
+  Erken çıkışta o ana kadar toplananlar yine hesaba geçer.
+- Diğer iki kutucuk `ready:false` ile kilitli görünüyor.
+
+**Pazar Yeri** — 4 kalıcı yükseltme, fiyatlar ★ cinsinden ve her seviyede üstel artıyor
+(kazma 40, matkap 200, ekip 800, tılsım 3.000 başlangıç). Satın alınan seviye
+`currentRate()` çarpanına giriyor.
+
 ### Şu an kilitli bölümler
 
-Pazar Yeri, Canlı Bot, Görevler ve Cüzdan sekmeleri **"YAKINDA GELİYOR"** ekranı gösteriyor.
-Kod ve arayüzleri hazır, sadece gizli:
-
-- **Pazar Yeri** — 4 kalıcı yükseltme (kazma / matkap / ekip / tılsım), üstel fiyatlama
-- **Canlı Bot** — 8 saatlik vardiya, %50 verimle sen yokken kazar
-- **Görevler** — kanal/grup/X takibi, davet, seri kazım ödülleri
-- **Cüzdan** — bakiye kartı, kaynak dağılımı, işlem defteri, çekim talebi
-
-Bir bölümü açmak için `index.html` içinde o bölümün `.soon` bloğunu sil ve
-ilgili elemandan `is-locked` sınıfını kaldır. Başka bir değişiklik gerekmiyor —
-JS tarafı zaten çalışıyor.
+Görevler ve Cüzdan sekmeleri **"YAKINDA GELİYOR"** ekranı gösteriyor; arayüzleri hazır,
+`is-locked` ile gizli. Açmak için o bölümün `.soon` bloğunu sil ve `is-locked` sınıfını
+kaldır — JS tarafı zaten çalışıyor.
 **Ayarlar** — titreşim, ses, animasyon, bildirim anahtarları + sıfırlama
 
 ## Kazım döngüsü
@@ -128,6 +140,8 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `AD_SECONDS` | Simüle reklam süresi | `5` |
 | `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `5` / `2` |
 | `LIVE_MS` | Canlı sayacın boyanma aralığı (ms) | `120` |
+| `GAME_MS` | Oyun süresi | 60 sn |
+| `GAME_POINT_PER_BB` | Toplanan her BB'nin puan değeri | `1` |
 | `BOT_MS` / `BOT_EFFICIENCY` | Bot vardiyası ve verimi | 8 saat / %50 |
 
 > `RATE_STEP` bilinçli olarak çok düşük (12 saatlik ilk oturum ~0,12 BB verir).

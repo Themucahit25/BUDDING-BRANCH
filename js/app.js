@@ -30,8 +30,6 @@
   const ADD_TIME_DAILY_MAX = 4;    // +12H günlük hak
   const AD_SECONDS = 5;            // ödüllü reklam süresi (gerçek SDK bunu belirler)
 
-  const BOT_MS = 8 * HOUR;
-  const BOT_EFFICIENCY = 0.5;
   const SAVE_KEY = 'bb_mining_state_v2';
   const TOTAL_SUPPLY = 13300;
 
@@ -41,14 +39,13 @@
     fromMine: 0,
     fromTask: 0,
     fromRef: 0,
+    points: 0,           // ★ puan — oyunlardan kazanılır, pazar yerinde harcanır
     rate: 0,             // BB/saat — 0'dan başlar, BAŞLAT ve 2X ile büyür
     mining: false,
     timeLeft: 0,         // ms
     boostUsed: false,    // bu kazım oturumunda 2X kullanıldı mı
     addTimeDay: '',      // +12H günlük sayacın tarihi
     addTimeCount: 0,     // bugün kaç kez +12H alındı
-    botUntil: 0,
-    botEarned: 0,
     upgrades: { pick: 0, drill: 0, crew: 0, luck: 0 },
     tasks: {},
     ledger: [],
@@ -70,13 +67,24 @@
     return Math.max(0, ADD_TIME_DAILY_MAX - S.addTimeCount);
   }
 
-  /* ─────────── Yükseltmeler ─────────── */
+  /* ─────────── Yükseltmeler — fiyatlar ★ puan cinsinden ─────────── */
   const SHOP = [
-    { id: 'pick',  ico: '⛏️', bg: '#fdf1d4', name: 'Elmas Uçlu Kazma', desc: 'Her seviye kazım hızına +%15 ekler.', base: 250,  step: 1.85, max: 10, mult: 0.15 },
-    { id: 'drill', ico: '🛠️', bg: '#e4efff', name: 'Buharlı Matkap',   desc: 'Her seviye kazım hızına +%35 ekler.', base: 1200, step: 2.05, max: 8,  mult: 0.35 },
-    { id: 'crew',  ico: '👷', bg: '#e8f6e3', name: 'Madenci Ekibi',    desc: 'Her seviye kazım hızına +%60 ekler.', base: 5000, step: 2.25, max: 6,  mult: 0.60 },
-    { id: 'luck',  ico: '🍀', bg: '#f0e6ff', name: 'Şans Tılsımı',     desc: 'Her seviye kazım hızına +%100 ekler.', base: 20000, step: 2.6, max: 4, mult: 1.00 }
+    { id: 'pick',  ico: '⛏️', bg: '#fdf1d4', name: 'Elmas Uçlu Kazma', desc: 'Her seviye kazım hızına +%15 ekler.', base: 40,   step: 1.7,  max: 10, mult: 0.15 },
+    { id: 'drill', ico: '🛠️', bg: '#e4efff', name: 'Buharlı Matkap',   desc: 'Her seviye kazım hızına +%35 ekler.', base: 200,  step: 1.85, max: 8,  mult: 0.35 },
+    { id: 'crew',  ico: '👷', bg: '#e8f6e3', name: 'Madenci Ekibi',    desc: 'Her seviye kazım hızına +%60 ekler.', base: 800,  step: 2.0,  max: 6,  mult: 0.60 },
+    { id: 'luck',  ico: '🍀', bg: '#f0e6ff', name: 'Şans Tılsımı',     desc: 'Her seviye kazım hızına +%100 ekler.', base: 3000, step: 2.3,  max: 4,  mult: 1.00 }
   ];
+
+  /* ─────────── Oyunlar — yeni oyun eklemek için buraya bir satır ─────────── */
+  const GAMES = [
+    { id: 'bbrain', name: 'BB Yağmuru', desc: '60 SN', ready: true },
+    { id: 'soon1',  name: 'Yakında',    desc: '—',     ready: false },
+    { id: 'soon2',  name: 'Yakında',    desc: '—',     ready: false }
+  ];
+
+  /* Oyun ayarları */
+  const GAME_MS = 60 * 1000;   // oyun süresi
+  const GAME_POINT_PER_BB = 1; // toplanan her BB'nin puan değeri
 
   const TASKS = [
     { id: 't1', ico: '📢', name: 'Telegram kanalına katıl',   reward: 500,  url: 'https://t.me/telegram' },
@@ -99,8 +107,8 @@
     shopGrid: $('shopGrid'), taskList: $('taskList'), ledger: $('ledger'),
     walletBalance: $('walletBalance'), walletUser: $('walletUser'),
     wMine: $('wSrcMine'), wTask: $('wSrcTask'), wRef: $('wSrcRef'),
-    botState: $('botState'), botEff: $('botEff'), botTime: $('botTime'),
-    botEarned: $('botEarned'), btnBot: $('btnBot'),
+    pointsMarket: $('pointsMarket'), pointsGames: $('pointsGames'),
+    gameGrid: $('gameGrid'),
     modal: $('modal'), modalIco: $('modalIco'), modalTitle: $('modalTitle'),
     modalBody: $('modalBody'), modalYes: $('modalYes'), modalNo: $('modalNo'),
     toastWrap: $('toastWrap')
@@ -281,11 +289,6 @@
       }
     }
 
-    if (S.botUntil > now) {
-      const g = currentRate() * BOT_EFFICIENCY * (dt / HOUR);
-      grant(g, 'mine');
-      S.botEarned += g;
-    }
   }
 
   /* Canlı sayaç — her karede yalnızca iki metin düğümü güncellenir */
@@ -321,13 +324,6 @@
       toast('Kazım süresi doldu. Tekrar başlatabilirsin.', 'warn', '⏳');
       haptic('warning');
       paintLedger();
-    }
-
-    if (S.botUntil !== 0 && S.botUntil <= Date.now() && S.botEarned > 0) {
-      logLedger('🤖', 'Bot vardiyası tamamlandı', S.botEarned);
-      toast('Bot vardiyası bitti: +' + fmtSmall(S.botEarned) + ' BB', 'ok', '🤖');
-      S.botEarned = 0;
-      S.botUntil = 0;
     }
 
     if (floatAcc > 0 && S.mining && Math.random() < 0.3) {
@@ -397,18 +393,12 @@
       : 'Günlük hakkın<br>doldu, yarın gel';
 
 
-    /* bot paneli */
-    const botOn = S.botUntil > now;
-    el.botState.textContent = botOn ? 'ÇALIŞIYOR' : 'DEVRE DIŞI';
-    el.botState.classList.toggle('on', botOn);
-    el.botEff.textContent = '%' + Math.round(BOT_EFFICIENCY * 100);
-    el.botTime.textContent = clock(Math.max(0, S.botUntil - now));
-    el.botEarned.textContent = fmt(S.botEarned) + ' BB';
-    el.btnBot.textContent = botOn ? 'BOT ÇALIŞIYOR…' : 'BOTU 8 SAAT ÇALIŞTIR';
-    el.btnBot.classList.toggle('off', botOn);
+    /* puan rozetleri */
+    el.pointsMarket.textContent = fmtInt(S.points);
+    el.pointsGames.textContent = fmtInt(S.points);
 
     /* mağaza yalnız değişince yeniden çizilsin */
-    const sig = SHOP.map((i) => S.upgrades[i.id]).join(',') + '|' + Math.floor(S.total);
+    const sig = SHOP.map((i) => S.upgrades[i.id]).join(',') + '|' + S.points;
     if (sig !== lastShopSig) { lastShopSig = sig; paintShop(); }
   }
 
@@ -419,7 +409,6 @@
       const lvl = S.upgrades[item.id];
       const maxed = lvl >= item.max;
       const price = priceOf(item);
-      const afford = S.total >= price;
 
       const row = document.createElement('div');
       row.className = 'shop-item';
@@ -431,21 +420,19 @@
           '<span class="shop-lvl">SEVİYE ' + lvl + ' / ' + item.max + '</span>' +
         '</div>' +
         '<button class="shop-buy' + (maxed ? ' maxed' : '') + '"' + (maxed ? ' disabled' : '') + '>' +
-          (maxed ? 'MAKS.' : fmtInt(price)) +
-          (maxed ? '' : '<small>BB</small>') +
+          (maxed ? 'MAKS.' : '<span class="buy-price">★ ' + fmtInt(price) + '</span><small>PUAN</small>') +
         '</button>';
 
       if (!maxed) {
         row.querySelector('.shop-buy').addEventListener('click', () => {
-          if (!afford) {
-            toast('Yetersiz BB. Gereken: ' + fmtInt(price) + ' BB', 'err', '💰');
+          if (S.points < price) {
+            toast('Yetersiz puan. Gereken: ' + fmtInt(price) + ' ★', 'err', '⭐');
             haptic('error');
             return;
           }
-          S.total -= price;
-          S.fromMine -= price;
+          S.points -= price;
           S.upgrades[item.id]++;
-          logLedger(item.ico, item.name + ' Sv.' + S.upgrades[item.id], -price);
+          logLedger(item.ico, item.name + ' Sv.' + S.upgrades[item.id] + ' · ' + fmtInt(price) + ' ★', 0);
           toast(item.name + ' seviye ' + S.upgrades[item.id] + ' oldu!', 'ok', '⚡');
           haptic('success');
           lastShopSig = '';
@@ -455,6 +442,213 @@
       el.shopGrid.appendChild(row);
     });
   }
+
+  /* ═══════════════════════════════════════
+     OYUN ALANI
+     ═══════════════════════════════════════ */
+  function paintGames() {
+    el.gameGrid.innerHTML = '';
+    GAMES.forEach((g) => {
+      const tile = document.createElement('button');
+      tile.className = 'game-tile ' + (g.ready ? 'ready' : 'locked');
+
+      const art = g.ready
+        ? '<img class="drop" src="assets/coin-sm.png" alt="">' +
+          '<img class="drop" src="assets/coin-sm.png" alt="">' +
+          '<img class="drop" src="assets/coin-sm.png" alt="">'
+        : '<span class="game-lock"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm3 8H9V7a3 3 0 0 1 6 0Z"/></svg></span>';
+
+      tile.innerHTML =
+        '<span class="game-art">' + art + '</span>' +
+        '<span class="game-name">' + g.name + '</span>' +
+        '<span class="game-desc">' + (g.ready ? g.desc : 'YAKINDA') + '</span>';
+
+      if (g.ready) tile.addEventListener('click', () => { haptic('medium'); openGame(g.id); });
+      el.gameGrid.appendChild(tile);
+    });
+  }
+
+  /* ─── BB Yağmuru ─── */
+  const G = {
+    on: false, raf: 0, coins: [], last: 0,
+    endsAt: 0, nextSpawn: 0, collected: 0, w: 0, h: 0
+  };
+
+  function openGame(id) {
+    if (id !== 'bbrain') return;
+    $('gName').textContent = 'BB YAĞMURU';
+    $('gameView').classList.add('open');
+    $('gEnd').classList.remove('open');
+    startRound();
+  }
+
+  function clearCoins() {
+    G.coins.forEach((c) => c.el.remove());
+    G.coins = [];
+  }
+
+  function startRound() {
+    const area = $('gArea');
+    clearCoins();
+    G.collected = 0;
+    $('gScore').textContent = '0';
+    $('gTime').textContent = Math.round(GAME_MS / 1000);
+    $('gBar').style.width = '100%';
+    $('gEnd').classList.remove('open');
+
+    /* 3-2-1 geri sayım, sonra tur başlar */
+    const ready = $('gReady');
+    const cd = $('gCountdown');
+    ready.classList.remove('hide');
+    let n = 3;
+    cd.textContent = n;
+    const iv = setInterval(() => {
+      n--;
+      if (n > 0) { cd.textContent = n; haptic('light'); return; }
+      clearInterval(iv);
+      ready.classList.add('hide');
+      G.on = true;
+      G.endsAt = Date.now() + GAME_MS;
+      G.nextSpawn = Date.now();
+      G.last = performance.now();
+      G.w = area.clientWidth;
+      G.h = area.clientHeight;
+      haptic('success');
+      G.raf = requestAnimationFrame(gameFrame);
+    }, 700);
+  }
+
+  function spawnCoin() {
+    const area = $('gArea');
+    const size = 54;
+    const c = {
+      x: 6 + Math.random() * Math.max(1, G.w - size - 12),
+      y: -size,
+      vy: 150 + Math.random() * 130,           // px/sn
+      rot: Math.random() * 360,
+      vr: (Math.random() - 0.5) * 120,
+      size: size,
+      el: document.createElement('span')
+    };
+    c.el.className = 'bb';
+    c.el.innerHTML = '<img src="assets/coin-sm.png" alt="">';
+    c.el.addEventListener('pointerdown', (e) => { e.preventDefault(); collectCoin(c); });
+    area.appendChild(c.el);
+    G.coins.push(c);
+  }
+
+  function collectCoin(c) {
+    if (c.dead) return;
+    c.dead = true;
+    G.collected++;
+    $('gScore').textContent = fmtInt(G.collected);
+    haptic('light');
+
+    /* patlama + uçan +1 */
+    c.el.style.setProperty('--px', c.x + 'px');
+    c.el.style.setProperty('--py', c.y + 'px');
+    c.el.classList.add('pop');
+    const el2 = c.el;
+    setTimeout(() => el2.remove(), 320);
+
+    const plus = document.createElement('span');
+    plus.className = 'gv-plus';
+    plus.textContent = '+' + GAME_POINT_PER_BB;
+    plus.style.left = c.x + 'px';
+    plus.style.top = c.y + 'px';
+    $('gArea').appendChild(plus);
+    setTimeout(() => plus.remove(), 820);
+
+    G.coins = G.coins.filter((x) => x !== c);
+  }
+
+  function gameFrame(ts) {
+    if (!G.on) return;
+    const dt = Math.min(0.05, (ts - G.last) / 1000);
+    G.last = ts;
+
+    const area = $('gArea');
+    G.w = area.clientWidth;
+    G.h = area.clientHeight;
+
+    const remain = G.endsAt - Date.now();
+    if (remain <= 0) { endRound(); return; }
+
+    $('gTime').textContent = Math.ceil(remain / 1000);
+    $('gBar').style.width = (remain / GAME_MS * 100) + '%';
+
+    /* zorluk: süre ilerledikçe daha sık düşer.
+       Doğma anı mutlak zamana bağlı — kare düşse de hız gerçek zamanla uyumlu kalır. */
+    const prog = 1 - remain / GAME_MS;
+    const spawnEvery = 620 - prog * 340;      // 620ms → 280ms
+    const now = Date.now();
+    if (now >= G.nextSpawn) {
+      spawnCoin();
+      G.nextSpawn = now + spawnEvery;
+    }
+
+    /* hareket */
+    for (let i = G.coins.length - 1; i >= 0; i--) {
+      const c = G.coins[i];
+      c.y += c.vy * dt * (1 + prog * 0.35);
+      c.rot += c.vr * dt;
+      if (c.y > G.h + c.size) {           // kaçırıldı
+        c.el.remove();
+        G.coins.splice(i, 1);
+        continue;
+      }
+      c.el.style.transform = 'translate3d(' + c.x + 'px,' + c.y + 'px,0) rotate(' + c.rot + 'deg)';
+    }
+
+    G.raf = requestAnimationFrame(gameFrame);
+  }
+
+  function endRound() {
+    G.on = false;
+    cancelAnimationFrame(G.raf);
+    clearCoins();
+    $('gTime').textContent = '0';
+    $('gBar').style.width = '0%';
+
+    const earned = G.collected * GAME_POINT_PER_BB;
+    S.points += earned;
+
+    $('gEndCollected').textContent = fmtInt(G.collected);
+    $('gEndPoints').textContent = '+' + fmtInt(earned);
+    $('gEndTotal').textContent = fmtInt(S.points) + ' ★';
+    $('gEnd').classList.add('open');
+    haptic('success');
+
+    if (earned > 0) logLedger('🎮', 'BB Yağmuru · ' + fmtInt(earned) + ' ★', 0);
+    lastShopSig = '';
+    save(); render(); paintLedger();
+    bumpPoints();
+  }
+
+  function closeGame() {
+    if (G.on) { endRound(); return; }   // erken çıkışta da toplananlar verilir
+    G.on = false;
+    cancelAnimationFrame(G.raf);
+    clearCoins();
+    $('gameView').classList.remove('open');
+    $('gEnd').classList.remove('open');
+  }
+
+  function bumpPoints() {
+    document.querySelectorAll('.pts-pill').forEach((p) => {
+      p.classList.remove('bump');
+      void p.offsetWidth;
+      p.classList.add('bump');
+    });
+  }
+
+  $('gClose').addEventListener('click', () => { haptic('light'); closeGame(); });
+  $('gExit').addEventListener('click', () => {
+    haptic('light');
+    $('gameView').classList.remove('open');
+    $('gEnd').classList.remove('open');
+  });
+  $('gAgain').addEventListener('click', () => { haptic('medium'); startRound(); });
 
   /* ─────────── Görevler ─────────── */
   function paintTasks() {
@@ -579,26 +773,6 @@
     S.timeLeft += ADD_TIME_MS;
     logLedger('⏰', '+12 saat kazım süresi', 0);
     toast('+12 saat eklendi · Toplam ' + clock(S.timeLeft), 'ok', '⏰');
-    haptic('success');
-    save(); render(); paintLedger();
-  });
-
-  el.btnBot.addEventListener('click', async () => {
-    haptic('medium');
-    if (S.botUntil > Date.now()) {
-      toast('Bot şu an çalışıyor · ' + clock(S.botUntil - Date.now()), 'warn', '🤖');
-      return;
-    }
-    const ok = await ask({
-      icon: '🤖', title: 'Canlı Botu Çalıştır',
-      body: 'Bot <b>8 saat</b> boyunca senin yerine kazar.<br>Verim: normal hızın <b>%50</b>si.<br><br>Uygulamayı kapatsan da çalışır.',
-      yes: 'ÇALIŞTIR', no: 'VAZGEÇ'
-    });
-    if (!ok) return;
-    S.botUntil = Date.now() + BOT_MS;
-    S.botEarned = 0;
-    logLedger('🤖', 'Bot vardiyası başladı (8s)', 0);
-    toast('Bot çalışmaya başladı!', 'ok', '🤖');
     haptic('success');
     save(); render(); paintLedger();
   });
@@ -763,12 +937,6 @@
       S.timeLeft -= used;
       if (S.timeLeft <= 0) { S.timeLeft = 0; S.mining = false; }
     }
-    if (S.botUntil > S.lastTick) {
-      const botMs = Math.min(away, S.botUntil - S.lastTick);
-      const g = currentRate() * BOT_EFFICIENCY * (botMs / HOUR);
-      earned += g;
-      S.botEarned += g;
-    }
     S.lastTick = now;
     if (earned > 0.01) {
       S.total += earned;
@@ -831,6 +999,7 @@
     document.body.classList.toggle('no-anim', !S.settings.anim);
 
     paintShop();
+    paintGames();
     paintTasks();
     paintLedger();
     render();

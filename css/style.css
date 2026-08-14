@@ -436,6 +436,157 @@ img{display:block;max-width:100%}
 .head-block{padding:8px 4px 14px}
 .head-block h2{font-size:23px;font-weight:800;color:#100c07;letter-spacing:.6px}
 .head-block p{margin:4px 0 0;font-size:12px;font-weight:700;color:var(--ink-2);opacity:.85;line-height:1.5}
+.head-row{display:flex;align-items:center;gap:12px}
+.head-txt{flex:1;min-width:0}
+
+/* ═══ PUAN ROZETİ ═══ */
+.pts-pill{
+  flex:none;display:flex;align-items:center;gap:7px;
+  padding:9px 15px 9px 12px;border-radius:999px;
+  background:linear-gradient(150deg,#12492a,var(--forest));
+  box-shadow:0 6px 16px rgba(10,30,12,.28), inset 0 0 0 1.5px rgba(201,162,74,.5);
+}
+.pts-star{width:19px;height:19px;flex:none;fill:#ffcf4d;filter:drop-shadow(0 0 5px rgba(255,200,60,.65))}
+.pts-pill b{font-family:'Baloo 2';font-size:19px;font-weight:800;color:#fff;line-height:1}
+.pts-pill.bump{animation:ptsBump .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes ptsBump{0%,100%{transform:scale(1)}45%{transform:scale(1.13)}}
+
+/* ═══ OYUN ALANI ═══ */
+.game-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.game-tile{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  padding:12px 7px 11px;border-radius:20px;text-align:center;overflow:hidden;
+  background:linear-gradient(170deg,#fffdf8,#f2e6d2);
+  box-shadow:0 5px 0 #ded0b6, var(--sh-m), inset 0 0 0 1.5px rgba(255,255,255,.75);
+  transition:transform .16s cubic-bezier(.2,.9,.3,1), box-shadow .16s;
+}
+.game-tile.ready:active{transform:translateY(4px);box-shadow:0 1px 0 #ded0b6, var(--sh-s)}
+.game-art{
+  position:relative;width:100%;aspect-ratio:1;margin-bottom:8px;
+  border-radius:16px;overflow:hidden;
+  background:linear-gradient(165deg,#2a4a8f,#12244d);
+  display:grid;place-items:center;
+}
+.game-art img{width:52%;filter:drop-shadow(0 3px 8px rgba(0,0,0,.45))}
+/* düşen BB'ler — kutucuk önizlemesi */
+.game-art .drop{
+  position:absolute;width:20%;opacity:.9;
+  animation:tileDrop 2.4s linear infinite;
+}
+.game-art .drop:nth-child(1){left:12%;animation-delay:0s}
+.game-art .drop:nth-child(2){left:66%;animation-delay:.8s}
+.game-art .drop:nth-child(3){left:40%;animation-delay:1.6s}
+@keyframes tileDrop{
+  0%{transform:translateY(-40%);opacity:0}
+  20%{opacity:.95}
+  100%{transform:translateY(320%);opacity:0}
+}
+.game-name{font-family:'Baloo 2';font-size:12px;font-weight:800;color:#100c07;line-height:1.15}
+.game-desc{margin-top:3px;font-size:9px;font-weight:800;color:var(--green-d);letter-spacing:.3px}
+.game-tile.locked .game-art{background:linear-gradient(165deg,#8f8676,#5d564a)}
+.game-tile.locked .game-name,.game-tile.locked .game-desc{color:var(--muted)}
+.game-lock{
+  position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);
+  width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(30,24,14,.72);box-shadow:inset 0 0 0 2px rgba(255,255,255,.25);
+}
+.game-lock svg{width:17px;height:17px;fill:#f2e2bd}
+
+/* ═══ OYUN EKRANI ═══ */
+.gameview{
+  position:fixed;inset:0;z-index:80;display:none;
+  flex-direction:column;
+  background:linear-gradient(180deg,#0f2740 0%,#123a5c 45%,#0b2038 100%);
+  overflow:hidden;
+}
+.gameview.open{display:flex;animation:fadeIn .25s}
+.gv-top{
+  flex:none;display:flex;align-items:center;gap:10px;
+  padding:calc(12px + var(--safe-t)) 14px 8px;
+}
+.gv-stat{min-width:74px}
+.gv-stat.right{text-align:right}
+.gv-stat span{display:block;font-size:8.5px;font-weight:900;letter-spacing:1.2px;color:#7fb0d8}
+.gv-stat b{font-family:'Baloo 2';font-size:23px;font-weight:800;color:#fff;line-height:1.1}
+.gv-title{
+  flex:1;text-align:center;font-family:'Baloo 2';font-size:14px;font-weight:800;
+  letter-spacing:1.4px;color:#cfe6f7;
+}
+.gv-close{
+  flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);
+}
+.gv-close svg{width:15px;height:15px;fill:#fff}
+.gv-close:active{transform:scale(.9)}
+
+.gv-bar{flex:none;height:6px;margin:0 14px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
+.gv-bar i{display:block;height:100%;width:100%;border-radius:999px;background:linear-gradient(90deg,var(--leaf),#ffd34d)}
+
+.gv-area{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:manipulation}
+
+/* düşen BB */
+.bb{
+  position:absolute;top:0;left:0;
+  width:54px;height:54px;
+  will-change:transform;
+  cursor:pointer;
+}
+.bb img{width:100%;height:100%;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
+.bb.pop{animation:bbPop .3s ease-out forwards;pointer-events:none}
+@keyframes bbPop{
+  0%{opacity:1}
+  100%{opacity:0;transform:translate(var(--px),var(--py)) scale(1.8)}
+}
+.gv-plus{
+  position:absolute;font-family:'Baloo 2';font-weight:800;font-size:19px;color:#ffe9a8;
+  text-shadow:0 2px 8px rgba(0,0,0,.6);pointer-events:none;
+  animation:gvPlus .8s ease-out forwards;
+}
+@keyframes gvPlus{
+  0%{opacity:0;transform:translateY(0) scale(.7)}
+  25%{opacity:1;transform:translateY(-10px) scale(1.1)}
+  100%{opacity:0;transform:translateY(-52px) scale(.9)}
+}
+
+/* geri sayım */
+.gv-ready{
+  position:absolute;inset:0;z-index:5;display:grid;place-content:center;justify-items:center;
+  background:rgba(8,22,38,.55);backdrop-filter:blur(3px);
+}
+.gv-ready b{
+  font-family:'Baloo 2';font-size:88px;font-weight:800;color:#fff;line-height:1;
+  text-shadow:0 6px 24px rgba(0,0,0,.5);
+  animation:readyPop .9s ease-out infinite;
+}
+@keyframes readyPop{0%{transform:scale(.55);opacity:0}35%{transform:scale(1.1);opacity:1}100%{transform:scale(1.35);opacity:0}}
+.gv-ready span{margin-top:8px;font-size:12px;font-weight:900;letter-spacing:3px;color:#9fc8e6}
+.gv-ready.hide{display:none}
+
+/* bitiş kartı */
+.gv-end{
+  position:absolute;inset:0;z-index:9;display:none;
+  align-items:center;justify-content:center;padding:24px;
+  background:rgba(6,18,32,.8);backdrop-filter:blur(6px);
+}
+.gv-end.open{display:flex;animation:fadeIn .25s}
+.gv-end-card{
+  width:min(100%,340px);padding:26px 22px 18px;border-radius:28px;text-align:center;
+  background:linear-gradient(170deg,#fffdf7,#f3e7d2);
+  box-shadow:0 24px 50px rgba(0,0,0,.4), inset 0 0 0 1.5px rgba(255,255,255,.7);
+  animation:popIn .35s cubic-bezier(.2,1.1,.4,1);
+}
+.gv-end-ico{font-size:44px;line-height:1;margin-bottom:6px}
+.gv-end-card h3{font-size:21px;font-weight:800;color:#100c07;letter-spacing:.8px}
+.gv-end-rows{margin:16px 0 18px;display:grid;gap:2px}
+.gv-end-rows div{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 4px;border-bottom:1px dashed var(--line);
+  font-size:12.5px;font-weight:700;color:var(--ink-2);
+}
+.gv-end-rows div:last-child{border-bottom:none}
+.gv-end-rows b{font-family:'Baloo 2';font-size:17px;font-weight:800;color:#100c07}
+.gv-end-rows b.gain{color:var(--green-d)}
+.gv-end-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 /* ═══ YAKINDA GELİYOR ═══ */
 .soon{
@@ -506,6 +657,7 @@ img{display:block;max-width:100%}
   display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.1;
   transition:transform .12s, box-shadow .12s;
 }
+.shop-buy .buy-price{display:block;font-size:13.5px;line-height:1.1;white-space:nowrap}
 .shop-buy small{font-size:8.5px;opacity:.92;font-weight:800;letter-spacing:.5px}
 .shop-buy:active{transform:translateY(4px);box-shadow:0 0 0 var(--gold-d)}
 .shop-buy.maxed{background:linear-gradient(180deg,#c4b7a2,#a2947d);box-shadow:0 4px 0 #7f7461}
