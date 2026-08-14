@@ -44,6 +44,8 @@
 
   --r-s:12px; --r-m:18px; --r-l:24px; --r-xl:30px;
   --pad:14px;
+  /* tüm arayüzü aşağı kaydıran üst boşluk — tek yerden ayarlanır */
+  --top-gap:36px;
   --safe-t:env(safe-area-inset-top,0px);
   --safe-b:env(safe-area-inset-bottom,0px);
 }
@@ -78,7 +80,7 @@ img{display:block;max-width:100%}
 .topbar{
   position:relative;z-index:5;flex:none;
   display:flex;align-items:center;gap:10px;
-  padding:calc(12px + var(--safe-t)) var(--pad) 10px;
+  padding:calc(12px + var(--top-gap) + var(--safe-t)) var(--pad) 10px;
 }
 .emblem{
   width:56px;height:56px;flex:none;border-radius:50%;
@@ -429,13 +431,6 @@ img{display:block;max-width:100%}
   animation:lockPulse 2.2s ease-in-out infinite .5s;
 }
 @keyframes lockPulse{0%,100%{opacity:0;transform:scale(.9)}50%{opacity:1;transform:scale(1.12)}}
-
-.mini-note{
-  flex:none;margin-top:9px;padding:9px 12px;border-radius:15px;
-  background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px var(--line);
-  font-size:10.5px;font-weight:700;color:var(--ink-2);text-align:center;line-height:1.45;
-}
-.mini-note b{color:var(--gold-d)}
 
 /* ═══ SAYFA BAŞLIKLARI ═══ */
 .head-block{padding:8px 4px 14px}

@@ -92,7 +92,7 @@
   const el = {
     rate: $('rateValue'), timer: $('timerValue'),
     totalMain: $('totalMain'), totalTail: $('totalTail'),
-    note: $('sessionNote'), floatLayer: $('floatLayer'),
+    floatLayer: $('floatLayer'),
     scene: document.querySelector('.scene-card'),
     actStart: $('actStart'), actBoost: $('actBoost'), actTime: $('actTime'),
     statReg: $('statRegistered'), statAct: $('statActive'), statSup: $('statSupply'),
@@ -396,16 +396,6 @@
       ? 'Bugün kalan hak<br><b>' + timeLeftToday + ' / ' + ADD_TIME_DAILY_MAX + '</b>'
       : 'Günlük hakkın<br>doldu, yarın gel';
 
-    /* ── alt not ── */
-    if (miningOn) {
-      el.note.innerHTML = 'Kazım <b>çalışıyor</b> · saatte <b>' + fmt(currentRate()) + ' BB</b>';
-    } else if (S.timeLeft > 0) {
-      el.note.innerHTML = '<b>' + clock(S.timeLeft) + '</b> süren hazır. <b>KAZIMI BAŞLAT</b>\'a dokun.';
-    } else if (S.rate > 0) {
-      el.note.innerHTML = 'Süren bitti. <b>KAZIMI BAŞLAT</b> ile yeni oturum aç.';
-    } else {
-      el.note.innerHTML = 'Hoş geldin! Başlamak için <b>KAZIMI BAŞLAT</b>\'a dokun.';
-    }
 
     /* bot paneli */
     const botOn = S.botUntil > now;
