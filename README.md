@@ -43,7 +43,7 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
   (her katman resimdeki gerçek nesnenin koordinatına oturtuldu)
 - Kazım hızı / kalan süre HUD kartları
 - Altın kenarlı "Toplam Kazılan BB" barı + uçan `+BB` efektleri
-- 3 aksiyon kartı: **Kazımı Başlat**, **Kazımı 2X Yükselt**, **+12:00H Zaman Ekle**
+- 3 aksiyon kartı — kilit durumları animasyonlu (gri filtre + ortaya oturan kilit rozeti)
 - Kazım aktifken sahne hızlanır: tüm parıltılar 2-3x hızlanır, sahneye sıcak bir iç ışıma gelir,
   başlat kartı yeşil nabız halkası alır
 
@@ -61,6 +61,30 @@ Bir bölümü açmak için `index.html` içinde o bölümün `.soon` bloğunu si
 ilgili elemandan `is-locked` sınıfını kaldır. Başka bir değişiklik gerekmiyor —
 JS tarafı zaten çalışıyor.
 **Ayarlar** — titreşim, ses, animasyon, bildirim anahtarları + sıfırlama
+
+## Kazım döngüsü
+
+Kullanıcı **sıfırdan** başlar: hız 0, süre 0, toplam 0.
+
+| Buton | Etki | Kilit kuralı |
+|---|---|---|
+| **KAZIMI BAŞLAT** | Hıza `+RATE_STEP` (0,01 BB/sa) ve süreye **+12 saat** ekler, kazımı başlatır | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
+| **KAZIMI 2X YÜKSELT** | Ödüllü reklam → hızı **kalıcı olarak 2 katına** çıkarır | Kazım başlamadan kilitli; oturum başına **1 hak**, kullanınca kilitlenir |
+| **+12:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+12 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
+
+Kart kilitlendiğinde içerik gri filtreye girer ve ortaya kilit rozeti yaylanarak oturur.
+
+### Ödüllü reklamı gerçek SDK'ya bağlama
+
+`js/app.js` içindeki `watchRewardedAd()` şu an simülasyon: `AD_SECONDS` saniye
+geri sayar ve ödülü verir. Gerçek sağlayıcıya geçerken sadece bu fonksiyonun
+gövdesini değiştir — izleme tamamlandıysa `true`, iptal/hata durumunda `false` döndür.
+Çağıran taraf ödülü yalnızca `true` gelirse veriyor, başka değişiklik gerekmiyor.
+
+```js
+// Örn. Adsgram
+return AdController.show().then(() => true, () => false);
+```
 
 **Motor**
 - 1 sn'lik tick ile gerçek zamanlı birikim
@@ -92,12 +116,16 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 
 | Sabit | Anlamı | Varsayılan |
 |---|---|---|
-| `BASE_RATE` | Temel kazım hızı (BB/saat) | `12.5` |
-| `SESSION_MS` | İlk oturum süresi | 24 saat |
-| `MAX_TIME_MS` | Biriktirilebilir süre tavanı | 48 saat |
-| `ADD_TIME_MS` | Zaman ekle butonu | 12 saat |
-| `BOOST_MS` | 2X süresi | 4 saat |
+| `RATE_STEP` | BAŞLAT'ın hıza eklediği BB/saat | `0.01` |
+| `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
+| `BOOST_FACTOR` | 2X yükseltmenin çarpanı | `2` |
+| `ADD_TIME_MS` | +12H butonunun eklediği süre | 12 saat |
+| `ADD_TIME_DAILY_MAX` | +12H günlük hak | `4` |
+| `AD_SECONDS` | Simüle reklam süresi | `5` |
 | `BOT_MS` / `BOT_EFFICIENCY` | Bot vardiyası ve verimi | 8 saat / %50 |
+
+> `RATE_STEP` bilinçli olarak çok düşük (12 saatlik ilk oturum ~0,12 BB verir).
+> Ekonomiyi hızlandırmak istersen ilk ayarlayacağın yer burası.
 
 ## Backend'e taşırken
 

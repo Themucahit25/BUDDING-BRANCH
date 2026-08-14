@@ -198,6 +198,9 @@
           <span class="act-go go-orange">
             <svg viewBox="0 0 24 24"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4Z"/></svg>
           </span>
+          <span class="act-lock">
+            <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm3 8H9V7a3 3 0 0 1 6 0Zm-3 5a1.6 1.6 0 0 1 1 2.8V19a1 1 0 0 1-2 0v-1.2A1.6 1.6 0 0 1 12 15Z"/></svg>
+          </span>
         </button>
 
         <button class="act act-blue" id="actBoost">
@@ -225,6 +228,9 @@
           <span class="act-go go-blue">
             <svg viewBox="0 0 24 24"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4Z"/></svg>
           </span>
+          <span class="act-lock">
+            <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm3 8H9V7a3 3 0 0 1 6 0Zm-3 5a1.6 1.6 0 0 1 1 2.8V19a1 1 0 0 1-2 0v-1.2A1.6 1.6 0 0 1 12 15Z"/></svg>
+          </span>
         </button>
 
         <button class="act act-green" id="actTime">
@@ -247,6 +253,9 @@
           <p>Kazım süresine<br>+12 saat ekle!</p>
           <span class="act-go go-green">
             <svg viewBox="0 0 24 24"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4Z"/></svg>
+          </span>
+          <span class="act-lock">
+            <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm3 8H9V7a3 3 0 0 1 6 0Zm-3 5a1.6 1.6 0 0 1 1 2.8V19a1 1 0 0 1-2 0v-1.2A1.6 1.6 0 0 1 12 15Z"/></svg>
           </span>
         </button>
       </div>
@@ -417,6 +426,18 @@
       <svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.07 7.07 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.58.24-1.12.55-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.67 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.12.22.38.3.6.22l2.39-.96c.5.39 1.04.7 1.62.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.58-.24 1.12-.55 1.62-.94l2.39.96c.22.08.48 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64ZM12 15.6A3.6 3.6 0 1 1 15.6 12 3.6 3.6 0 0 1 12 15.6Z"/></svg>
     </button>
   </nav>
+</div>
+
+<!-- ══════════════ ÖDÜLLÜ REKLAM ══════════════ -->
+<div class="adview" id="adView">
+  <div class="ad-box">
+    <span class="ad-tag">REKLAM</span>
+    <div class="ad-spin"><i></i><i></i><i></i></div>
+    <h3 id="adTitle">Reklam yükleniyor…</h3>
+    <p>Ödülünü almak için reklamı sonuna kadar izle.</p>
+    <div class="ad-count"><span id="adCount">5</span></div>
+    <button class="wide-btn ghost" id="adSkip">VAZGEÇ</button>
+  </div>
 </div>
 
 <!-- ══════════════ TOAST + MODAL ══════════════ -->

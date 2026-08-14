@@ -20,27 +20,33 @@
     } catch (e) { /* sessizce yut */ }
   }
 
-  /* ─────────── Sabitler ─────────── */
+  /* ─────────── Sabitler (denge burada ayarlanır) ─────────── */
   const HOUR = 3600 * 1000;
-  const BASE_RATE = 12.5;          // BB / saat
-  const SESSION_MS = 24 * HOUR;    // tek oturum süresi
-  const MAX_TIME_MS = 48 * HOUR;   // biriktirilebilir tavan
-  const ADD_TIME_MS = 12 * HOUR;
-  const BOOST_MS = 4 * HOUR;       // 2x süresi
+
+  const RATE_STEP = 0.01;          // KAZIMI BAŞLAT her basışta hıza eklenen BB/saat
+  const START_TIME_MS = 12 * HOUR; // KAZIMI BAŞLAT her basışta eklenen süre
+  const BOOST_FACTOR = 2;          // 2X yükseltmenin hızı çarpanı (kalıcı)
+  const ADD_TIME_MS = 12 * HOUR;   // +12H butonunun eklediği süre
+  const ADD_TIME_DAILY_MAX = 4;    // +12H günlük hak
+  const AD_SECONDS = 5;            // ödüllü reklam süresi (gerçek SDK bunu belirler)
+
   const BOT_MS = 8 * HOUR;
   const BOT_EFFICIENCY = 0.5;
-  const SAVE_KEY = 'bb_mining_state_v1';
+  const SAVE_KEY = 'bb_mining_state_v2';
   const TOTAL_SUPPLY = 13300;
 
-  /* ─────────── Durum ─────────── */
+  /* ─────────── Durum — her şey 0'dan başlar ─────────── */
   const S = {
     total: 0,            // kazılan toplam BB
     fromMine: 0,
     fromTask: 0,
     fromRef: 0,
+    rate: 0,             // BB/saat — 0'dan başlar, BAŞLAT ve 2X ile büyür
     mining: false,
     timeLeft: 0,         // ms
-    boostUntil: 0,       // timestamp
+    boostUsed: false,    // bu kazım oturumunda 2X kullanıldı mı
+    addTimeDay: '',      // +12H günlük sayacın tarihi
+    addTimeCount: 0,     // bugün kaç kez +12H alındı
     botUntil: 0,
     botEarned: 0,
     upgrades: { pick: 0, drill: 0, crew: 0, luck: 0 },
@@ -49,6 +55,20 @@
     lastTick: Date.now(),
     settings: { haptic: true, sound: false, anim: true, notify: true }
   };
+
+  /* ─────────── Günlük sayaç sıfırlama ─────────── */
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function rolloverDaily() {
+    const t = todayKey();
+    if (S.addTimeDay !== t) { S.addTimeDay = t; S.addTimeCount = 0; }
+  }
+  function addTimeLeftToday() {
+    rolloverDaily();
+    return Math.max(0, ADD_TIME_DAILY_MAX - S.addTimeCount);
+  }
 
   /* ─────────── Yükseltmeler ─────────── */
   const SHOP = [
@@ -105,11 +125,11 @@
   }
 
   /* ─────────── Hız hesabı ─────────── */
+  /* S.rate temel hız; pazar yeri açıldığında yükseltmeler bunu çarpar. */
   function currentRate() {
     let mult = 1;
     SHOP.forEach((it) => { mult += it.mult * S.upgrades[it.id]; });
-    if (Date.now() < S.boostUntil) mult *= 2;
-    return BASE_RATE * mult;
+    return S.rate * mult;
   }
 
   /* ─────────── Bildirimler ─────────── */
@@ -145,6 +165,41 @@
   el.modalYes.addEventListener('click', () => { haptic('medium'); closeModal(true); });
   el.modalNo.addEventListener('click', () => { haptic('light'); closeModal(false); });
   el.modal.addEventListener('click', (e) => { if (e.target === el.modal) closeModal(false); });
+
+  /* ═══════════════════════════════════════
+     ÖDÜLLÜ REKLAM
+     ───────────────────────────────────────
+     Şu an simülasyon: AD_SECONDS saniye geri sayar, sonra ödülü verir.
+     GERÇEK SDK'YA BAĞLARKEN: aşağıdaki gövdeyi sağlayıcının çağrısıyla
+     değiştir; izleme tamamlandıysa true, iptal/hata ise false döndür.
+     Örn. Adsgram:  return AdController.show().then(() => true, () => false);
+     ═══════════════════════════════════════ */
+  let adTimer = null;
+  function watchRewardedAd(title) {
+    return new Promise((resolve) => {
+      const view = $('adView');
+      const cnt = $('adCount');
+      let left = AD_SECONDS;
+
+      $('adTitle').textContent = title || 'Ödülünü kazanıyorsun…';
+      cnt.textContent = left;
+      view.classList.add('open');
+
+      function finish(ok) {
+        clearInterval(adTimer); adTimer = null;
+        view.classList.remove('open');
+        $('adSkip').onclick = null;
+        resolve(ok);
+      }
+      $('adSkip').onclick = () => { haptic('light'); finish(false); };
+
+      adTimer = setInterval(() => {
+        left--;
+        cnt.textContent = left > 0 ? left : '✓';
+        if (left <= 0) { haptic('success'); setTimeout(() => finish(true), 450); }
+      }, 1000);
+    });
+  }
 
   function floatGain(text) {
     if (!S.settings.anim) return;
@@ -202,8 +257,9 @@
       if (S.timeLeft <= 0) {
         S.timeLeft = 0;
         S.mining = false;
+        S.boostUsed = false;          // yeni oturumda 2X hakkı tazelenir
         logLedger('⛏️', 'Kazım oturumu tamamlandı', 0);
-        toast('Kazım süresi doldu. Süre ekleyerek devam edebilirsin.', 'warn', '⏳');
+        toast('Kazım süresi doldu. Tekrar başlatabilirsin.', 'warn', '⏳');
         haptic('warning');
       }
     }
@@ -228,9 +284,10 @@
      ═══════════════════════════════════════ */
   let lastShopSig = '';
 
+  function setOff(btn, off) { btn.classList.toggle('off', !!off); }
+
   function render() {
     const now = Date.now();
-    const boosted = now < S.boostUntil;
 
     el.rate.textContent = fmt(currentRate());
     el.timer.textContent = clock(S.timeLeft);
@@ -240,45 +297,56 @@
     el.wTask.textContent = fmt(S.fromTask);
     el.wRef.textContent = fmt(S.fromRef);
 
-    /* sahne durumu */
-    el.scene.classList.toggle('is-mining', S.mining && S.timeLeft > 0);
-    el.actStart.classList.toggle('is-on', S.mining && S.timeLeft > 0);
-    el.actBoost.classList.toggle('is-on', boosted);
+    /* ── kazım durumu ── */
+    const miningOn = S.mining && S.timeLeft > 0;
+    el.scene.classList.toggle('is-mining', miningOn);
+    el.actStart.classList.toggle('is-on', miningOn);
 
-    /* başlat butonu metni */
+    /* ── BAŞLAT: kazım sürerken gri + kilitli ── */
+    setOff(el.actStart, miningOn);
     const h3 = el.actStart.querySelector('h3');
     const p = el.actStart.querySelector('p');
-    if (S.mining && S.timeLeft > 0) {
+    if (miningOn) {
       h3.textContent = 'KAZIM AKTİF';
-      p.innerHTML = 'Durdurmak için<br>dokun';
+      p.innerHTML = 'Süre bitene<br>kadar çalışır';
     } else {
       h3.textContent = 'KAZIMI BAŞLAT';
       p.innerHTML = 'Kazımı başlat<br>ve BB kazan!';
     }
 
-    /* boost butonu */
+    /* ── 2X: kazım başlamadan kilitli, oturumda 1 hak ── */
+    setOff(el.actBoost, !miningOn || S.boostUsed);
     const bH3 = el.actBoost.querySelector('h3');
     const bP = el.actBoost.querySelector('p');
-    if (boosted) {
-      bH3.innerHTML = '2X AKTİF';
-      bP.innerHTML = 'Kalan süre<br>' + clock(S.boostUntil - now);
+    if (S.boostUsed) {
+      bH3.innerHTML = '2X<br>KULLANILDI';
+      bP.innerHTML = 'Bu oturumdaki<br>hakkın doldu';
+    } else if (!miningOn) {
+      bH3.innerHTML = 'KAZIMI 2X<br>YÜKSELT';
+      bP.innerHTML = 'Önce kazımı<br>başlatman gerek';
     } else {
       bH3.innerHTML = 'KAZIMI 2X<br>YÜKSELT';
       bP.innerHTML = 'Kazım hızını<br>2 katına çıkar!';
     }
 
-    /* alt not */
-    if (S.mining && S.timeLeft > 0) {
-      el.note.innerHTML = 'Kazım <b>çalışıyor</b> · saatte <b>' + fmt(currentRate()) + ' BB</b>' +
-        (boosted ? ' · <b>2X</b> aktif' : '');
-    } else if (S.timeLeft <= 0) {
-      el.note.innerHTML = 'Süren bitti. <b>+12:00H ZAMAN EKLE</b> ile yeni süre al.';
-    } else {
-      el.note.innerHTML = 'Kazım pasif. Başlatmak için <b>KAZIMI BAŞLAT</b>\'a dokun.';
-    }
+    /* ── +12H: günde ADD_TIME_DAILY_MAX hak ── */
+    const timeLeftToday = addTimeLeftToday();
+    setOff(el.actTime, timeLeftToday <= 0);
+    const tP = el.actTime.querySelector('p');
+    tP.innerHTML = timeLeftToday > 0
+      ? 'Bugün kalan hak<br><b>' + timeLeftToday + ' / ' + ADD_TIME_DAILY_MAX + '</b>'
+      : 'Günlük hakkın<br>doldu, yarın gel';
 
-    /* zaman ekle butonu doluluk */
-    el.actTime.disabled = S.timeLeft >= MAX_TIME_MS;
+    /* ── alt not ── */
+    if (miningOn) {
+      el.note.innerHTML = 'Kazım <b>çalışıyor</b> · saatte <b>' + fmt(currentRate()) + ' BB</b>';
+    } else if (S.timeLeft > 0) {
+      el.note.innerHTML = '<b>' + clock(S.timeLeft) + '</b> süren hazır. <b>KAZIMI BAŞLAT</b>\'a dokun.';
+    } else if (S.rate > 0) {
+      el.note.innerHTML = 'Süren bitti. <b>KAZIMI BAŞLAT</b> ile yeni oturum aç.';
+    } else {
+      el.note.innerHTML = 'Hoş geldin! Başlamak için <b>KAZIMI BAŞLAT</b>\'a dokun.';
+    }
 
     /* bot paneli */
     const botOn = S.botUntil > now;
@@ -390,71 +458,80 @@
   /* ═══════════════════════════════════════
      AKSİYONLAR
      ═══════════════════════════════════════ */
-  el.actStart.addEventListener('click', async () => {
+  /* ── KAZIMI BAŞLAT: hıza +RATE_STEP, süreye +12sa, kazım aktif ── */
+  el.actStart.addEventListener('click', () => {
+    if (S.mining && S.timeLeft > 0) return;   // kilitli
     haptic('medium');
-    if (S.mining && S.timeLeft > 0) {
-      S.mining = false;
-      toast('Kazım duraklatıldı.', 'warn', '⏸️');
-      save(); render();
-      return;
-    }
-    if (S.timeLeft <= 0) {
-      const ok = await ask({
-        icon: '⏳', title: 'Kazım süren yok',
-        body: 'Kazıma başlamak için önce süre eklemelisin.<br><b>+12:00H ZAMAN EKLE</b> ile 12 saat kazanabilirsin.',
-        yes: '12 SAAT EKLE', no: 'KAPAT'
-      });
-      if (ok) addTime();
-      return;
-    }
+
+    S.rate += RATE_STEP;
+    S.timeLeft += START_TIME_MS;
     S.mining = true;
+    S.boostUsed = false;
     S.lastTick = Date.now();
-    logLedger('⛏️', 'Kazım başlatıldı', 0);
+
+    logLedger('⛏️', 'Kazım başlatıldı · +' + fmt(RATE_STEP) + ' BB/sa', 0);
     toast('Kazım başladı! Saatte ' + fmt(currentRate()) + ' BB', 'ok', '⛏️');
     haptic('success');
     save(); render(); paintLedger();
   });
 
+  /* ── KAZIMI 2X YÜKSELT: ödüllü reklam, oturumda 1 kez, hızı kalıcı ikiye katlar ── */
   el.actBoost.addEventListener('click', async () => {
+    if (!S.mining || S.timeLeft <= 0 || S.boostUsed) return;   // kilitli
     haptic('medium');
-    if (Date.now() < S.boostUntil) {
-      toast('2X zaten aktif · ' + clock(S.boostUntil - Date.now()), 'warn', '⚡');
-      return;
-    }
+
+    const before = currentRate();
     const ok = await ask({
       icon: '⚡', title: 'Kazımı 2X Yükselt',
-      body: 'Kazım hızın <b>4 saat</b> boyunca <b>2 katına</b> çıkar.<br><br>Reklam izleyerek ücretsiz aktifleştir.',
-      yes: 'AKTİFLEŞTİR', no: 'VAZGEÇ'
+      body: 'Kısa bir reklam izle, kazım hızın <b>kalıcı olarak 2 katına</b> çıksın.' +
+            '<br><br>Şu an: <b>' + fmt(before) + ' BB/sa</b>' +
+            '<br>Sonra: <b>' + fmt(before * BOOST_FACTOR) + ' BB/sa</b>' +
+            '<br><br>Her kazım oturumunda <b>1 kez</b> kullanılabilir.',
+      yes: 'REKLAMI İZLE', no: 'VAZGEÇ'
     });
     if (!ok) return;
-    S.boostUntil = Date.now() + BOOST_MS;
-    logLedger('⚡', '2X hız yükseltmesi (4s)', 0);
-    toast('2X aktif! 4 saat boyunca çift hız.', 'ok', '⚡');
+
+    const watched = await watchRewardedAd('Kazım hızın 2X oluyor…');
+    if (!watched) {
+      toast('Reklam tamamlanmadı, ödül verilmedi.', 'warn', '⚠️');
+      return;
+    }
+
+    S.rate *= BOOST_FACTOR;
+    S.boostUsed = true;
+    logLedger('⚡', '2X yükseltme · ' + fmt(currentRate()) + ' BB/sa', 0);
+    toast('Kazım hızın 2 katına çıktı! ' + fmt(currentRate()) + ' BB/sa', 'ok', '⚡');
     haptic('success');
     save(); render(); paintLedger();
   });
 
-  function addTime() {
-    if (S.timeLeft >= MAX_TIME_MS) {
-      toast('Süre tavanına ulaştın (48 saat).', 'warn', '⏳');
+  /* ── +12:00H ZAMAN EKLE: ödüllü reklam, günde ADD_TIME_DAILY_MAX kez ── */
+  el.actTime.addEventListener('click', async () => {
+    if (addTimeLeftToday() <= 0) return;   // kilitli
+    haptic('medium');
+
+    const ok = await ask({
+      icon: '⏰', title: '+12 Saat Zaman Ekle',
+      body: 'Kısa bir reklam izle, kazım süresine <b>12 saat</b> eklensin.' +
+            '<br><br>Kalan süre: <b>' + clock(S.timeLeft) + '</b>' +
+            '<br>Bugün kalan hak: <b>' + addTimeLeftToday() + ' / ' + ADD_TIME_DAILY_MAX + '</b>',
+      yes: 'REKLAMI İZLE', no: 'VAZGEÇ'
+    });
+    if (!ok) return;
+
+    const watched = await watchRewardedAd('12 saat ekleniyor…');
+    if (!watched) {
+      toast('Reklam tamamlanmadı, ödül verilmedi.', 'warn', '⚠️');
       return;
     }
-    S.timeLeft = Math.min(MAX_TIME_MS, S.timeLeft + ADD_TIME_MS);
+
+    rolloverDaily();
+    S.addTimeCount++;
+    S.timeLeft += ADD_TIME_MS;
     logLedger('⏰', '+12 saat kazım süresi', 0);
     toast('+12 saat eklendi · Toplam ' + clock(S.timeLeft), 'ok', '⏰');
     haptic('success');
-    if (!S.mining) { S.mining = true; S.lastTick = Date.now(); }
     save(); render(); paintLedger();
-  }
-
-  el.actTime.addEventListener('click', async () => {
-    haptic('medium');
-    const ok = await ask({
-      icon: '⏰', title: '+12 Saat Zaman Ekle',
-      body: 'Kazım süresine <b>12 saat</b> eklenecek.<br>Maksimum birikim <b>48 saat</b>.<br><br>Reklam izleyerek ücretsiz al.',
-      yes: 'ZAMAN EKLE', no: 'VAZGEÇ'
-    });
-    if (ok) addTime();
   });
 
   el.btnBot.addEventListener('click', async () => {
@@ -528,11 +605,12 @@
     haptic('light');
     ask({
       icon: '📘', title: 'Nasıl Oynanır?',
-      body: '1. <b>Zaman ekle</b> — kazım için süre kazan.<br>' +
-            '2. <b>Kazımı başlat</b> — BB birikmeye başlar.<br>' +
-            '3. <b>2X yükselt</b> — 4 saat çift hız.<br>' +
-            '4. <b>Pazar yeri</b> — kalıcı hız yükseltmeleri al.<br>' +
-            '5. <b>Canlı bot</b> — sen yokken %50 verimle kazar.',
+      body: '1. <b>Kazımı Başlat</b> — hızına +' + fmt(RATE_STEP) + ' BB/sa ve süreye 12 saat ekler, ' +
+            'kazım çalışmaya başlar. Süre bitene kadar buton kilitli kalır.<br><br>' +
+            '2. <b>Kazımı 2X Yükselt</b> — reklam izle, hızın kalıcı olarak 2 katına çıksın. ' +
+            'Her oturumda 1 kez.<br><br>' +
+            '3. <b>+12:00H Zaman Ekle</b> — reklam izle, süreye 12 saat eklensin. ' +
+            'Günde en fazla ' + ADD_TIME_DAILY_MAX + ' kez.',
       yes: 'ANLADIM', single: true
     });
   });
@@ -701,13 +779,12 @@
 
     const had = load();
     if (!had) {
-      S.timeLeft = SESSION_MS;
+      /* ilk giriş: hız, süre ve toplam sıfır */
       S.lastTick = Date.now();
-      logLedger('🌱', 'Hoş geldin bonusu', 100);
-      S.total = 100; S.fromMine = 100;
     } else {
       offlineCatchUp();
     }
+    rolloverDaily();
 
     /* ayar kutucuklarını yansıt */
     Object.keys(setMap).forEach((id) => { $(id).checked = !!S.settings[setMap[id]]; });
