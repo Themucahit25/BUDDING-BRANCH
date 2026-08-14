@@ -1,0 +1,16 @@
+# Bağımlılıklar
+node_modules/
+
+# İşletim sistemi
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editör
+.vscode/
+.idea/
+*.swp
+
+# Geçici
+*.log
+debug.html

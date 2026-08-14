@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#FAF0E3">
+<title>Budding Branch — Mining</title>
+<link rel="icon" href="assets/coin-sm.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+<div class="app-frame">
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header class="topbar">
+    <img class="emblem" src="assets/coin.png" alt="Budding Branch">
+    <div class="brand-text">
+      <h1>BUDDING BRANCH</h1>
+      <div class="brand-sub"><span class="dot"></span> MINING <span class="dot"></span></div>
+    </div>
+
+    <button class="sq-btn" id="btnSocial" aria-label="Sosyal">
+      <svg viewBox="0 0 24 24"><path d="M16 11a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 16 11Zm-8 .5A3 3 0 1 0 5 8.5a3 3 0 0 0 3 3Zm0 2c-2.3 0-6 1.2-6 3.5V19h8v-1.6c0-1 .4-2 1.2-2.7a11 11 0 0 0-3.2-.7Zm8 0c-2.7 0-8 1.3-8 4V19h16v-1.5c0-2.7-5.3-4-8-4Z"/></svg>
+    </button>
+
+    <button class="sq-btn" id="btnBell" aria-label="Bildirimler">
+      <svg viewBox="0 0 24 24"><path d="M12 22a2.2 2.2 0 0 0 2.2-2.2H9.8A2.2 2.2 0 0 0 12 22Zm7-6.2v-5a7 7 0 0 0-5.3-6.8V3a1.7 1.7 0 0 0-3.4 0v1a7 7 0 0 0-5.3 6.8v5L3 17.8v.9h18v-.9Z"/></svg>
+      <i class="badge-dot"></i>
+    </button>
+  </header>
+
+  <!-- ══════════════ STAT STRIP ══════════════ -->
+  <section class="stat-strip">
+    <div class="stat">
+      <div class="stat-ico">
+        <svg viewBox="0 0 24 24" class="i-gold"><path d="M18 3h3v3a4 4 0 0 1-3.3 3.9A6 6 0 0 1 13 14v2.2c1.6.3 3 1.2 3 2.3v.5H8v-.5c0-1.1 1.4-2 3-2.3V14a6 6 0 0 1-4.7-4.1A4 4 0 0 1 3 6V3h3V2h12ZM6 5H5v1a2 2 0 0 0 1 1.7Zm12 0v2.7A2 2 0 0 0 19 6V5Z"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">KAYITLI MADENCİ</span>
+        <strong class="stat-value" id="statRegistered">13.300</strong>
+      </div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <div class="stat-ico">
+        <svg viewBox="0 0 24 24" class="i-green"><path d="M16 11a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 16 11Zm-8 .5A3 3 0 1 0 5 8.5a3 3 0 0 0 3 3Zm0 2c-2.3 0-6 1.2-6 3.5V19h8v-1.6c0-1 .4-2 1.2-2.7a11 11 0 0 0-3.2-.7Zm8 0c-2.7 0-8 1.3-8 4V19h16v-1.5c0-2.7-5.3-4-8-4Z"/></svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">AKTİF MADENCİ</span>
+        <strong class="stat-value" id="statActive">13.000</strong>
+      </div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <img class="stat-ico coin-img" src="assets/coin-sm.png" alt="">
+      <div class="stat-body">
+        <span class="stat-label">KALAN BB</span>
+        <strong class="stat-value" id="statSupply">13.300</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ PAGES ══════════════ -->
+  <main class="pages" id="pages">
+
+    <!-- ─────────── HOME ─────────── -->
+    <section class="page is-active" data-page="home">
+
+      <div class="scene-card">
+        <img class="scene-img" src="assets/scene.jpg" alt="Maden sahnesi">
+
+        <!-- animasyonlu ışık katmanı -->
+        <div class="fx sun-ray"></div>
+        <div class="fx lamp-glow"></div>
+        <div class="fx mine-pulse"></div>
+        <div class="fx crystal-glow"></div>
+        <div class="fx gold-glow"></div>
+        <div class="fx heat"></div>
+
+        <!-- parıltılar -->
+        <div class="motes">
+          <i style="--x:64%;--y:60%;--d:0s"></i>
+          <i style="--x:67%;--y:64%;--d:1.1s"></i>
+          <i style="--x:83%;--y:46%;--d:.6s"></i>
+          <i style="--x:87%;--y:49%;--d:1.7s"></i>
+          <i style="--x:89%;--y:77%;--d:2.2s"></i>
+          <i style="--x:45%;--y:70%;--d:1.4s"></i>
+          <i style="--x:72%;--y:55%;--d:2.7s"></i>
+          <i style="--x:58%;--y:66%;--d:.3s"></i>
+        </div>
+
+        <div class="scene-fade"></div>
+
+        <!-- ═══ FLOATING HUD ═══ -->
+        <div class="hud hud-left">
+          <button class="hud-info" data-tip="Saatlik BB kazım hızın. Yükseltmelerle ve 2X ile artar.">i</button>
+          <div class="hud-head">
+            <span class="hud-ico ring-green">
+              <svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 0 0-8 8 8 8 0 0 0 1.5 4.7l1.6-1.2A6 6 0 0 1 6 12a6 6 0 0 1 12 0 6 6 0 0 1-1.1 3.5l1.6 1.2A8 8 0 0 0 20 12a8 8 0 0 0-8-8Zm1 4-3.5 5.5a1.8 1.8 0 1 0 2.9 2Z"/></svg>
+            </span>
+            <span class="hud-title">KAZIM HIZI</span>
+          </div>
+          <div class="hud-value" id="rateValue">12,50</div>
+          <div class="hud-unit">KAZIM / SAAT</div>
+        </div>
+
+        <div class="hud hud-right">
+          <button class="hud-info" data-tip="Kazım oturumunun bitmesine kalan süre.">i</button>
+          <div class="hud-head">
+            <span class="hud-ico ring-blue">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 10.6 4.3 2.5-1 1.7-5.3-3V6h2Z"/></svg>
+            </span>
+            <span class="hud-title">KALAN SÜRE</span>
+          </div>
+          <div class="hud-value mono" id="timerValue">23:59:59</div>
+          <div class="hud-unit">SA : DK : SN</div>
+        </div>
+
+        <div class="float-layer" id="floatLayer"></div>
+      </div>
+
+      <!-- ═══ TOTAL MINED BAR ═══ -->
+      <div class="total-bar">
+        <img class="total-coin" src="assets/coin.png" alt="">
+        <div class="total-txt">
+          <span class="total-label">TOPLAM KAZILAN</span>
+          <div class="total-num"><strong id="totalValue">0,00</strong><em>BB</em></div>
+        </div>
+        <span class="total-shine"></span>
+        <span class="total-spark s-a">✦</span>
+        <span class="total-spark s-b">✦</span>
+      </div>
+
+      <!-- ═══ ACTION CARDS ═══ -->
+      <div class="actions">
+
+        <button class="act act-gold" id="actStart">
+          <div class="act-art">
+            <svg viewBox="0 0 100 100">
+              <defs>
+                <linearGradient id="pkSteel" x1="0" y1="0" x2=".7" y2="1">
+                  <stop offset="0%" stop-color="#fbfdfe"/><stop offset="34%" stop-color="#d3dae0"/>
+                  <stop offset="66%" stop-color="#9aa6b1"/><stop offset="100%" stop-color="#6d7a86"/>
+                </linearGradient>
+                <linearGradient id="pkWood" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#b8834a"/><stop offset="45%" stop-color="#8d5e2e"/><stop offset="100%" stop-color="#5e3c1b"/>
+                </linearGradient>
+                <linearGradient id="pkRock" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#6b6b6d"/><stop offset="100%" stop-color="#39393b"/>
+                </linearGradient>
+              </defs>
+
+              <!-- sap: sol alttan sağ üste, baştan biraz taşar -->
+              <path d="M14 88 L66 20" stroke="url(#pkWood)" stroke-width="11" stroke-linecap="round" fill="none"/>
+              <path d="M17 85 L62 26" stroke="#c9955c" stroke-width="3" stroke-linecap="round" fill="none" opacity=".5"/>
+              <path d="M24 77 L30 69 M36 61 L42 53" stroke="#5e3c1b" stroke-width="1.4" stroke-linecap="round" opacity=".4"/>
+              <ellipse cx="14.5" cy="87.5" rx="5.4" ry="4.4" fill="#e2bd8a" transform="rotate(-52 14.5 87.5)"/>
+
+              <!-- çelik baş: kavisli sivri uç (sol üst) -->
+              <path d="M50 24 C40 15 28 9 16 12 C26 18 38 27 50 38 Z" fill="url(#pkSteel)"/>
+              <path d="M50 24 C40 15 28 9 16 12 C27 13 38 19 48 28 Z" fill="#fbfdfe" opacity=".6"/>
+
+              <!-- çelik baş: kısa keski (sağ alt) -->
+              <path d="M56 30 L76 49 L66 63 L48 42 Z" fill="url(#pkSteel)"/>
+              <path d="M56 30 L76 49 L70 57 L52 36 Z" fill="#eef3f7" opacity=".55"/>
+              <path d="M66 63 L76 49 L79 52 L69 66 Z" fill="#5d6a76"/>
+
+              <!-- bilezik + perçin -->
+              <g transform="translate(52 36) rotate(-52.6)">
+                <rect x="-10" y="-7.6" width="20" height="15.2" rx="5" fill="url(#pkSteel)"/>
+                <rect x="-10" y="-7.6" width="20" height="5" rx="2.5" fill="#fff" opacity=".5"/>
+                <rect x="-10" y="3.6" width="20" height="4" rx="2" fill="#5d6a76" opacity=".45"/>
+              </g>
+              <circle cx="52" cy="36" r="2.5" fill="#8d9aa6"/>
+              <circle cx="51.3" cy="35.3" r="1" fill="#f2f6f9"/>
+
+              <!-- kayalar -->
+              <path d="M64 90 L66 76 L78 70 L89 78 L87 92 L74 96 Z" fill="url(#pkRock)"/>
+              <path d="M66 76 L78 70 L89 78 L76 82 Z" fill="#7c7c7e"/>
+              <path d="M42 92 L46 81 L57 83 L56 94 Z" fill="url(#pkRock)"/>
+              <path d="M46 81 L57 83 L50 86 Z" fill="#7c7c7e"/>
+              <path d="M31 94 L34 88 L40 90 L38 95 Z" fill="#4a4a4c"/>
+              <ellipse cx="61" cy="96" rx="3.2" ry="2.1" fill="#4a4a4c"/>
+
+              <!-- parıltı -->
+              <g fill="#fff"><circle cx="22" cy="6" r="2.8" opacity=".9"/><circle cx="32" cy="3" r="1.7" opacity=".7"/><circle cx="12" cy="4" r="1.5" opacity=".6"/></g>
+            </svg>
+          </div>
+          <h3>KAZIMI BAŞLAT</h3>
+          <p>Kazımı başlat<br>ve BB kazan!</p>
+          <span class="act-go go-orange">
+            <svg viewBox="0 0 24 24"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4Z"/></svg>
+          </span>
+        </button>
+
+        <button class="act act-blue" id="actBoost">
+          <div class="act-art">
+            <svg viewBox="0 0 100 100">
+              <defs>
+                <radialGradient id="bstG" cx="38%" cy="28%" r="78%">
+                  <stop offset="0%" stop-color="#5aa8ff"/><stop offset="55%" stop-color="#136fe4"/><stop offset="100%" stop-color="#0a4ba6"/>
+                </radialGradient>
+              </defs>
+              <g id="seal">
+                <path fill="#2f86f0" d="M46 6 l6.4 5.2 8-2.2 3.6 7.6 8.2 1.6 -.4 8.3 6.8 4.8 -4.2 7.2 4.2 7.2 -6.8 4.8 .4 8.3 -8.2 1.6 -3.6 7.6 -8-2.2 L46 72 l-6.4-5.2 -8 2.2 -3.6-7.6 -8.2-1.6 .4-8.3 -6.8-4.8 4.2-7.2 -4.2-7.2 6.8-4.8 -.4-8.3 8.2-1.6 3.6-7.6 8 2.2Z"/>
+              </g>
+              <circle cx="46" cy="39" r="27" fill="url(#bstG)"/>
+              <circle cx="46" cy="39" r="27" fill="none" stroke="#d8ecff" stroke-width="3.4"/>
+              <text x="46" y="51" text-anchor="middle" font-family="Baloo 2, sans-serif" font-size="30" font-weight="800" fill="#fff">2X</text>
+              <circle cx="76" cy="66" r="18" fill="#0f6ce0"/>
+              <circle cx="76" cy="66" r="18" fill="none" stroke="#eaf4ff" stroke-width="3.6"/>
+              <path d="M76 56 l9 11h-5v9h-8v-9h-5Z" fill="#fff"/>
+              <ellipse cx="34" cy="24" rx="6" ry="4" fill="#fff" opacity=".38" transform="rotate(-30 34 24)"/>
+            </svg>
+          </div>
+          <h3>KAZIMI 2X<br>YÜKSELT</h3>
+          <p>Kazım hızını<br>2 katına çıkar!</p>
+          <span class="act-go go-blue">
+            <svg viewBox="0 0 24 24"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4Z"/></svg>
+          </span>
+        </button>
+
+        <button class="act act-green" id="actTime">
+          <div class="act-art">
+            <svg viewBox="0 0 100 100">
+              <circle cx="44" cy="42" r="31" fill="#fdfbf4"/>
+              <circle cx="44" cy="42" r="31" fill="none" stroke="#3f9a1f" stroke-width="7"/>
+              <circle cx="44" cy="42" r="31" fill="none" stroke="#8ed05f" stroke-width="2.4" opacity=".8"/>
+              <g stroke="#2f7d16" stroke-width="3" stroke-linecap="round" opacity=".7">
+                <path d="M44 15v5"/><path d="M44 64v5"/><path d="M17 42h5"/><path d="M66 42h5"/>
+              </g>
+              <g stroke="#2f7d16" stroke-width="4.4" stroke-linecap="round"><path d="M44 42V24"/><path d="M44 42l13 8"/></g>
+              <circle cx="44" cy="42" r="4" fill="#2f7d16"/>
+              <circle cx="76" cy="70" r="19" fill="#3f9a1f"/>
+              <circle cx="76" cy="70" r="19" fill="none" stroke="#eefae7" stroke-width="3.6"/>
+              <path d="M72 68h-6v4h6v6h4v-6h6v-4h-6v-6h-4Z" fill="#fff"/>
+            </svg>
+          </div>
+          <h3>+12:00H<br>ZAMAN EKLE</h3>
+          <p>Kazım süresine<br>+12 saat ekle!</p>
+          <span class="act-go go-green">
+            <svg viewBox="0 0 24 24"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4Z"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <div class="mini-note" id="sessionNote">Kazım pasif. Başlatmak için <b>KAZIMI BAŞLAT</b>'a dokun.</div>
+    </section>
+
+    <!-- ─────────── MARKET ─────────── -->
+    <section class="page" data-page="market">
+      <div class="head-block">
+        <h2>PAZAR YERİ</h2>
+        <p>BB harcayarak kazım gücünü kalıcı olarak yükselt.</p>
+      </div>
+      <div class="shop-grid" id="shopGrid"></div>
+    </section>
+
+    <!-- ─────────── BOT ─────────── -->
+    <section class="page" data-page="bot">
+      <div class="head-block">
+        <h2>CANLI BOT</h2>
+        <p>Sen yokken senin yerine kazar. Süre dolunca durur.</p>
+      </div>
+      <div class="bot-panel">
+        <div class="bot-visual">
+          <svg viewBox="0 0 120 120" class="bot-svg">
+            <defs>
+              <linearGradient id="botB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0e7d6"/><stop offset="100%" stop-color="#c3b79f"/></linearGradient>
+            </defs>
+            <ellipse cx="60" cy="110" rx="30" ry="6" fill="#4a3a22" opacity=".16"/>
+            <path d="M60 18 v-8" stroke="#8a7a5f" stroke-width="3"/><circle class="bot-ant" cx="60" cy="8" r="5" fill="#ec9a04"/>
+            <rect x="28" y="20" width="64" height="50" rx="16" fill="url(#botB)"/>
+            <rect x="36" y="32" width="48" height="26" rx="10" fill="#12301c"/>
+            <circle class="bot-eye" cx="50" cy="45" r="5" fill="#8ed05f"/><circle class="bot-eye" cx="70" cy="45" r="5" fill="#8ed05f"/>
+            <rect x="34" y="74" width="52" height="30" rx="10" fill="url(#botB)"/>
+            <rect x="50" y="82" width="20" height="14" rx="5" fill="#339701"/>
+            <rect x="16" y="76" width="14" height="24" rx="7" fill="#d5c9b2"/>
+            <rect x="90" y="76" width="14" height="24" rx="7" fill="#d5c9b2"/>
+          </svg>
+        </div>
+        <div class="bot-info">
+          <div class="bot-state" id="botState">DEVRE DIŞI</div>
+          <div class="bot-rows">
+            <div class="row"><span>Bot verimi</span><b id="botEff">%50</b></div>
+            <div class="row"><span>Kalan bot süresi</span><b id="botTime" class="mono">00:00:00</b></div>
+            <div class="row"><span>Bot kazancı</span><b id="botEarned">0,00 BB</b></div>
+          </div>
+          <button class="wide-btn green" id="btnBot">BOTU 8 SAAT ÇALIŞTIR</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── TASKS ─────────── -->
+    <section class="page" data-page="tasks">
+      <div class="head-block">
+        <h2>GÖREVLER</h2>
+        <p>Görevleri tamamla, BB ödüllerini topla.</p>
+      </div>
+      <div class="task-list" id="taskList"></div>
+    </section>
+
+    <!-- ─────────── WALLET ─────────── -->
+    <section class="page" data-page="wallet">
+      <div class="head-block">
+        <h2>CÜZDAN</h2>
+        <p>Bakiyeni gör, transfer ve çekim işlemlerini yönet.</p>
+      </div>
+      <div class="wallet-card">
+        <div class="wallet-glow"></div>
+        <img class="wallet-coin" src="assets/coin.png" alt="">
+        <span class="wallet-label">TOPLAM BAKİYE</span>
+        <div class="wallet-amount"><strong id="walletBalance">0,00</strong><em>BB</em></div>
+        <div class="wallet-sub" id="walletUser">@madenci</div>
+        <div class="wallet-mini">
+          <div><span>KAZIM</span><b id="wSrcMine">0,00</b></div>
+          <div><span>GÖREV</span><b id="wSrcTask">0,00</b></div>
+          <div><span>REFERANS</span><b id="wSrcRef">0,00</b></div>
+        </div>
+      </div>
+      <div class="two-btn">
+        <button class="wide-btn gold" id="btnWithdraw">ÇEKİM YAP</button>
+        <button class="wide-btn ghost" id="btnInvite">ARKADAŞ DAVET ET</button>
+      </div>
+      <div class="ledger" id="ledger"></div>
+    </section>
+
+    <!-- ─────────── SETTINGS ─────────── -->
+    <section class="page" data-page="settings">
+      <div class="head-block">
+        <h2>AYARLAR</h2>
+        <p>Uygulama tercihlerini yönet.</p>
+      </div>
+      <div class="set-list">
+        <label class="set-row"><span>Titreşim geri bildirimi</span><input type="checkbox" id="setHaptic" checked><i class="sw"></i></label>
+        <label class="set-row"><span>Ses efektleri</span><input type="checkbox" id="setSound"><i class="sw"></i></label>
+        <label class="set-row"><span>Animasyonlar</span><input type="checkbox" id="setAnim" checked><i class="sw"></i></label>
+        <label class="set-row"><span>Kazım bildirimleri</span><input type="checkbox" id="setNotify" checked><i class="sw"></i></label>
+      </div>
+      <div class="set-list">
+        <button class="set-row link" id="btnHowto"><span>Nasıl Oynanır?</span><i class="chev"></i></button>
+        <button class="set-row link" id="btnSupport"><span>Destek</span><i class="chev"></i></button>
+        <button class="set-row link danger" id="btnReset"><span>İlerlemeyi Sıfırla</span><i class="chev"></i></button>
+      </div>
+      <div class="version">
+        <img src="assets/coin-sm.png" alt="">
+        BUDDING BRANCH · v1.0.0
+      </div>
+    </section>
+  </main>
+
+  <!-- ══════════════ BOTTOM NAV ══════════════ -->
+  <nav class="tabbar">
+    <button class="tab is-active" data-go="home" aria-label="Ana Sayfa">
+      <svg viewBox="0 0 24 24"><path d="M12 3 2 12h3v9h6v-6h2v6h6v-9h3Z"/></svg>
+    </button>
+    <span class="tab-div"></span>
+    <button class="tab" data-go="market" aria-label="Pazar Yeri">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4v2h16V4Zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1Zm-9 4H6v-4h6v4Z"/></svg>
+    </button>
+    <span class="tab-div"></span>
+    <button class="tab" data-go="bot" aria-label="Canlı Bot">
+      <svg viewBox="0 0 24 24"><path d="M20 9V7a2 2 0 0 0-2-2h-3a3 3 0 0 0-6 0H6a2 2 0 0 0-2 2v2a3 3 0 0 0 0 6v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4a3 3 0 0 0 0-6ZM7.5 11.5A1.5 1.5 0 1 1 9 13a1.5 1.5 0 0 1-1.5-1.5ZM17 17.5H7v-2h10Zm-.5-4.5a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5Z"/></svg>
+    </button>
+    <span class="tab-div"></span>
+    <button class="tab" data-go="tasks" aria-label="Görevler">
+      <svg viewBox="0 0 24 24"><path d="M9 2h6a2 2 0 0 1 2 2h2a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2a2 2 0 0 1 2-2Zm0 3v1h6V5Zm-1 6 3 3 5-5-1.4-1.4L11 12.2 9.4 10.6Z"/></svg>
+    </button>
+    <span class="tab-div"></span>
+    <button class="tab" data-go="wallet" aria-label="Cüzdan">
+      <svg viewBox="0 0 24 24"><path d="M21 18v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2Zm-9-2h10V8H12Zm4-2.5a1.5 1.5 0 1 1 1.5-1.5 1.5 1.5 0 0 1-1.5 1.5Z"/></svg>
+    </button>
+    <span class="tab-div"></span>
+    <button class="tab" data-go="settings" aria-label="Ayarlar">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.07 7.07 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.58.24-1.12.55-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.67 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.12.22.38.3.6.22l2.39-.96c.5.39 1.04.7 1.62.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.58-.24 1.12-.55 1.62-.94l2.39.96c.22.08.48 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64ZM12 15.6A3.6 3.6 0 1 1 15.6 12 3.6 3.6 0 0 1 12 15.6Z"/></svg>
+    </button>
+  </nav>
+</div>
+
+<!-- ══════════════ TOAST + MODAL ══════════════ -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <div class="modal-ico" id="modalIco">✦</div>
+    <h3 id="modalTitle">Başlık</h3>
+    <p id="modalBody">İçerik</p>
+    <div class="modal-btns">
+      <button class="wide-btn ghost" id="modalNo">VAZGEÇ</button>
+      <button class="wide-btn gold" id="modalYes">ONAYLA</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
