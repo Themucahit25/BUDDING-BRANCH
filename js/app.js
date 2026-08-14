@@ -112,18 +112,24 @@
   const fmt = (n) => nf2.format(n);
   const fmtInt = (n) => nf0.format(n);
 
-  /* Canlı sayaç için tutarı ikiye böler: "12.345,67" + "891234"
-     Toplam 8 ondalık — kazım hızı düşük olsa bile her karede hareket görünür. */
+  /* Canlı sayaç için tutarı ikiye böler: "12.345,67" + "891"
+     LIVE_HEAD kadarı büyük puntoda, kalanı küçük ve soluk akan hanelerde. */
+  const LIVE_DECIMALS = 5;   // sayaçta gösterilen toplam ondalık
+  const LIVE_HEAD = 2;       // bunun kaçı büyük puntoda
+  const LIVE_POW = Math.pow(10, LIVE_DECIMALS);
+
   function splitAmount(n) {
     if (!isFinite(n) || n < 0) n = 0;
-    const scaled = Math.floor(n * 1e8);
-    const frac = String(scaled % 1e8).padStart(8, '0');
-    return { main: nf0.format(Math.floor(n)) + ',' + frac.slice(0, 2), tail: frac.slice(2) };
+    const frac = String(Math.floor(n * LIVE_POW) % LIVE_POW).padStart(LIVE_DECIMALS, '0');
+    return {
+      main: nf0.format(Math.floor(n)) + ',' + frac.slice(0, LIVE_HEAD),
+      tail: frac.slice(LIVE_HEAD)
+    };
   }
 
-  /* Küçük tutarlar için: 1'in altındaysa 8 ondalık, üstündeyse 2 */
+  /* Küçük tutarlar için: 1'in altındaysa LIVE_DECIMALS ondalık, üstündeyse 2 */
   function fmtSmall(n) {
-    return n >= 1 ? nf2.format(n) : n.toFixed(8).replace('.', ',');
+    return n >= 1 ? nf2.format(n) : n.toFixed(LIVE_DECIMALS).replace('.', ',');
   }
 
   function clock(ms) {
@@ -289,9 +295,19 @@
     if (el.totalTail.textContent !== a.tail) el.totalTail.textContent = a.tail;
   }
 
-  function frame() {
-    accrue();
-    paintTotal();
+  /* Canlı sayaç döngüsü.
+     5 ondalıkta görünür değişim saniyede birkaç kez olduğu için her kareyi
+     boyamak gereksiz; LIVE_MS'de bir çalışıyor. rAF kullanılıyor ki sekme
+     arka plandayken tarayıcı döngüyü kendiliğinden durdursun. */
+  const LIVE_MS = 120;
+  let lastPaint = 0;
+
+  function frame(ts) {
+    if (ts - lastPaint >= LIVE_MS) {
+      lastPaint = ts;
+      accrue();
+      paintTotal();
+    }
     requestAnimationFrame(frame);
   }
 

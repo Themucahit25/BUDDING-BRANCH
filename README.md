@@ -42,7 +42,11 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
   maden girişinden sızan sıcak ışık, kristal ve altın parıltısı, yükselen toz zerrecikleri
   (her katman resimdeki gerçek nesnenin koordinatına oturtuldu)
 - Kazım hızı / kalan süre HUD kartları
-- Altın kenarlı "Toplam Kazılan BB" barı + uçan `+BB` efektleri
+- Altın kenarlı "Toplam Kazılan BB" **canlı sayacı**: 5 ondalık, ilk 2'si büyük
+  puntoda, son 3'ü küçük ve soluk akan hanelerde. Birikim geçen gerçek süreye
+  dayalı (`accrue()`), yani 1 saatte tam olarak kazım hızı kadar. Boyama
+  `LIVE_MS` aralıklı rAF döngüsünde — sekme arka plana geçince kendiliğinden durur.
+- Uçan `+BB` efektleri
 - 3 aksiyon kartı — kilit durumları animasyonlu (gri filtre + ortaya oturan kilit rozeti)
 - Kazım aktifken sahne hızlanır: tüm parıltılar 2-3x hızlanır, sahneye sıcak bir iç ışıma gelir,
   başlat kartı yeşil nabız halkası alır
@@ -122,6 +126,8 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `ADD_TIME_MS` | +12H butonunun eklediği süre | 12 saat |
 | `ADD_TIME_DAILY_MAX` | +12H günlük hak | `4` |
 | `AD_SECONDS` | Simüle reklam süresi | `5` |
+| `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `5` / `2` |
+| `LIVE_MS` | Canlı sayacın boyanma aralığı (ms) | `120` |
 | `BOT_MS` / `BOT_EFFICIENCY` | Bot vardiyası ve verimi | 8 saat / %50 |
 
 > `RATE_STEP` bilinçli olarak çok düşük (12 saatlik ilk oturum ~0,12 BB verir).
