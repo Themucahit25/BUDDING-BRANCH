@@ -25,7 +25,7 @@
 
   const RATE_STEP = 0.01;          // KAZIMI BAŞLAT her basışta hıza eklenen BB/saat
   const START_TIME_MS = 12 * HOUR; // KAZIMI BAŞLAT her basışta eklenen süre
-  const BOOST_FACTOR = 2;          // 2X yükseltmenin hızı çarpanı (kalıcı)
+  const BOX_COOLDOWN_MS = 3 * HOUR; // şans kutusu bekleme süresi
   const ADD_TIME_MS = 12 * HOUR;   // +12H butonunun eklediği süre
   const ADD_TIME_DAILY_MAX = 4;    // +12H günlük hak
   const AD_SECONDS = 5;            // ödüllü reklam süresi (gerçek SDK bunu belirler)
@@ -40,10 +40,10 @@
     fromTask: 0,
     fromRef: 0,
     points: 0,           // ★ puan — oyunlardan kazanılır, pazar yerinde harcanır
-    rate: 0,             // BB/saat — 0'dan başlar, BAŞLAT ve 2X ile büyür
+    rate: 0,             // BB/saat — 0'dan başlar, her BAŞLAT ile artar
     mining: false,
     timeLeft: 0,         // ms
-    boostUsed: false,    // bu kazım oturumunda 2X kullanıldı mı
+    boxNextAt: 0,        // şans kutusunun tekrar açılabileceği an
     addTimeDay: '',      // +12H günlük sayacın tarihi
     addTimeCount: 0,     // bugün kaç kez +12H alındı
     upgrades: { pick: 0, drill: 0, crew: 0, luck: 0 },
@@ -102,7 +102,7 @@
     totalMain: $('totalMain'), totalTail: $('totalTail'),
     floatLayer: $('floatLayer'),
     scene: document.querySelector('.scene-card'),
-    actStart: $('actStart'), actBoost: $('actBoost'), actTime: $('actTime'),
+    actStart: $('actStart'), actBox: $('actBox'), actTime: $('actTime'),
     statReg: $('statRegistered'), statAct: $('statActive'), statSup: $('statSupply'),
     shopGrid: $('shopGrid'), taskList: $('taskList'), ledger: $('ledger'),
     walletBalance: $('walletBalance'), walletUser: $('walletUser'),
@@ -284,7 +284,6 @@
       if (S.timeLeft <= 0) {
         S.timeLeft = 0;
         S.mining = false;
-        S.boostUsed = false;          // yeni oturumda 2X hakkı tazelenir
         sessionEnded = true;
       }
     }
@@ -369,20 +368,13 @@
       p.innerHTML = 'Kazımı başlat<br>ve BB kazan!';
     }
 
-    /* ── 2X: kazım başlamadan kilitli, oturumda 1 hak ── */
-    setOff(el.actBoost, !miningOn || S.boostUsed);
-    const bH3 = el.actBoost.querySelector('h3');
-    const bP = el.actBoost.querySelector('p');
-    if (S.boostUsed) {
-      bH3.innerHTML = '2X<br>KULLANILDI';
-      bP.innerHTML = 'Bu oturumdaki<br>hakkın doldu';
-    } else if (!miningOn) {
-      bH3.innerHTML = 'KAZIMI 2X<br>YÜKSELT';
-      bP.innerHTML = 'Önce kazımı<br>başlatman gerek';
-    } else {
-      bH3.innerHTML = 'KAZIMI 2X<br>YÜKSELT';
-      bP.innerHTML = 'Kazım hızını<br>2 katına çıkar!';
-    }
+    /* ── ŞANS KUTUSU: 3 saatte bir açılır, sonra geri sayımla kilitli ── */
+    const boxWait = S.boxNextAt - now;
+    setOff(el.actBox, boxWait > 0);
+    const bP = el.actBox.querySelector('p');
+    bP.innerHTML = boxWait > 0
+      ? 'Yeni kutu<br><b class="mono">' + clock(boxWait) + '</b>'
+      : 'Reklam izle<br>ücretsiz aç!';
 
     /* ── +12H: günde ADD_TIME_DAILY_MAX hak ── */
     const timeLeftToday = addTimeLeftToday();
@@ -402,8 +394,21 @@
     if (sig !== lastShopSig) { lastShopSig = sig; paintShop(); }
   }
 
-  /* ─────────── Mağaza ─────────── */
+  /* ─────────── Mağaza ───────────
+     Öğeler geçici olarak kapalı. Geri açmak için SHOP_ENABLED = true yeter;
+     aşağıdaki çizim kodu ve SHOP dizisi olduğu gibi duruyor. */
+  const SHOP_ENABLED = false;
+
   function paintShop() {
+    if (!SHOP_ENABLED) {
+      el.shopGrid.innerHTML =
+        '<div class="empty">' +
+          '<div class="empty-ico">🛒</div>' +
+          '<h4>Öğeler yakında</h4>' +
+          '<p>Pazar yeri şu an boş. Puanlarını biriktir,<br>yeni öğeler eklendiğinde harcayabilirsin.</p>' +
+        '</div>';
+      return;
+    }
     el.shopGrid.innerHTML = '';
     SHOP.forEach((item) => {
       const lvl = S.upgrades[item.id];
@@ -709,7 +714,6 @@
     S.rate += RATE_STEP;
     S.timeLeft += START_TIME_MS;
     S.mining = true;
-    S.boostUsed = false;
     S.lastTick = Date.now();
 
     logLedger('⛏️', 'Kazım başlatıldı · +' + fmt(RATE_STEP) + ' BB/sa', 0);
@@ -718,32 +722,29 @@
     save(); render(); paintLedger();
   });
 
-  /* ── KAZIMI 2X YÜKSELT: ödüllü reklam, oturumda 1 kez, hızı kalıcı ikiye katlar ── */
-  el.actBoost.addEventListener('click', async () => {
-    if (!S.mining || S.timeLeft <= 0 || S.boostUsed) return;   // kilitli
+  /* ── ŞANS KUTUSU: ödüllü reklam, 3 saatte bir ──
+     NOT: ödüller henüz eklenmedi; şu an yalnızca açılış + bekleme süresi işliyor. */
+  el.actBox.addEventListener('click', async () => {
+    if (Date.now() < S.boxNextAt) return;   // kilitli
     haptic('medium');
 
-    const before = currentRate();
     const ok = await ask({
-      icon: '⚡', title: 'Kazımı 2X Yükselt',
-      body: 'Kısa bir reklam izle, kazım hızın <b>kalıcı olarak 2 katına</b> çıksın.' +
-            '<br><br>Şu an: <b>' + fmt(before) + ' BB/sa</b>' +
-            '<br>Sonra: <b>' + fmt(before * BOOST_FACTOR) + ' BB/sa</b>' +
-            '<br><br>Her kazım oturumunda <b>1 kez</b> kullanılabilir.',
+      icon: '🎁', title: 'Şans Kutusu',
+      body: 'Kısa bir reklam izle, şans kutunu aç.' +
+            '<br><br>Her <b>3 saatte bir</b> açılabilir.',
       yes: 'REKLAMI İZLE', no: 'VAZGEÇ'
     });
     if (!ok) return;
 
-    const watched = await watchRewardedAd('Kazım hızın 2X oluyor…');
+    const watched = await watchRewardedAd('Şans kutun açılıyor…');
     if (!watched) {
-      toast('Reklam tamamlanmadı, ödül verilmedi.', 'warn', '⚠️');
+      toast('Reklam tamamlanmadı, kutu açılmadı.', 'warn', '⚠️');
       return;
     }
 
-    S.rate *= BOOST_FACTOR;
-    S.boostUsed = true;
-    logLedger('⚡', '2X yükseltme · ' + fmt(currentRate()) + ' BB/sa', 0);
-    toast('Kazım hızın 2 katına çıktı! ' + fmt(currentRate()) + ' BB/sa', 'ok', '⚡');
+    S.boxNextAt = Date.now() + BOX_COOLDOWN_MS;
+    logLedger('🎁', 'Şans kutusu açıldı', 0);
+    toast('Şans kutusu açıldı! Ödüller yakında eklenecek.', 'ok', '🎁');
     haptic('success');
     save(); render(); paintLedger();
   });
@@ -830,8 +831,7 @@
       icon: '📘', title: 'Nasıl Oynanır?',
       body: '1. <b>Kazımı Başlat</b> — hızına +' + fmt(RATE_STEP) + ' BB/sa ve süreye 12 saat ekler, ' +
             'kazım çalışmaya başlar. Süre bitene kadar buton kilitli kalır.<br><br>' +
-            '2. <b>Kazımı 2X Yükselt</b> — reklam izle, hızın kalıcı olarak 2 katına çıksın. ' +
-            'Her oturumda 1 kez.<br><br>' +
+            '2. <b>Şans Kutusu</b> — reklam izle, kutunu aç. Her 3 saatte bir açılabilir.<br><br>' +
             '3. <b>+12:00H Zaman Ekle</b> — reklam izle, süreye 12 saat eklensin. ' +
             'Günde en fazla ' + ADD_TIME_DAILY_MAX + ' kez.',
       yes: 'ANLADIM', single: true

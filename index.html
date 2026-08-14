@@ -204,28 +204,46 @@
           </span>
         </button>
 
-        <button class="act act-blue" id="actBoost">
+        <button class="act act-blue" id="actBox">
           <div class="act-art">
             <svg viewBox="0 0 100 100">
               <defs>
-                <radialGradient id="bstG" cx="38%" cy="28%" r="78%">
-                  <stop offset="0%" stop-color="#5aa8ff"/><stop offset="55%" stop-color="#136fe4"/><stop offset="100%" stop-color="#0a4ba6"/>
+                <linearGradient id="chWood" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#bd7c40"/><stop offset="55%" stop-color="#8d5423"/><stop offset="100%" stop-color="#5a3312"/>
+                </linearGradient>
+                <linearGradient id="chGold" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ffe895"/><stop offset="48%" stop-color="#f2b32c"/><stop offset="100%" stop-color="#bd7a0c"/>
+                </linearGradient>
+                <radialGradient id="chGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#fff6cc" stop-opacity=".95"/>
+                  <stop offset="55%" stop-color="#ffd45e" stop-opacity=".35"/>
+                  <stop offset="100%" stop-color="#ffc93c" stop-opacity="0"/>
                 </radialGradient>
               </defs>
-              <g id="seal">
-                <path fill="#2f86f0" d="M46 6 l6.4 5.2 8-2.2 3.6 7.6 8.2 1.6 -.4 8.3 6.8 4.8 -4.2 7.2 4.2 7.2 -6.8 4.8 .4 8.3 -8.2 1.6 -3.6 7.6 -8-2.2 L46 72 l-6.4-5.2 -8 2.2 -3.6-7.6 -8.2-1.6 .4-8.3 -6.8-4.8 4.2-7.2 -4.2-7.2 6.8-4.8 -.4-8.3 8.2-1.6 3.6-7.6 8 2.2Z"/>
-              </g>
-              <circle cx="46" cy="39" r="27" fill="url(#bstG)"/>
-              <circle cx="46" cy="39" r="27" fill="none" stroke="#d8ecff" stroke-width="3.4"/>
-              <text x="46" y="51" text-anchor="middle" font-family="Baloo 2, sans-serif" font-size="30" font-weight="800" fill="#fff">2X</text>
-              <circle cx="76" cy="66" r="18" fill="#0f6ce0"/>
-              <circle cx="76" cy="66" r="18" fill="none" stroke="#eaf4ff" stroke-width="3.6"/>
-              <path d="M76 56 l9 11h-5v9h-8v-9h-5Z" fill="#fff"/>
-              <ellipse cx="34" cy="24" rx="6" ry="4" fill="#fff" opacity=".38" transform="rotate(-30 34 24)"/>
+              <ellipse class="ch-glow" cx="50" cy="44" rx="40" ry="28" fill="url(#chGlow)"/>
+              <!-- kapak -->
+              <path d="M17 47 Q17 23 50 23 Q83 23 83 47 Z" fill="url(#chWood)"/>
+              <path d="M17 47 Q17 23 50 23 Q83 23 83 47" fill="none" stroke="#472708" stroke-width="2.2"/>
+              <path d="M21 45 Q22 28 40 25 Q28 31 26 45Z" fill="#d59356" opacity=".5"/>
+              <path d="M43 24.4 Q43 23 50 23 Q57 23 57 24.4 L57 47 L43 47 Z" fill="url(#chGold)"/>
+              <!-- gövde -->
+              <rect x="15" y="47" width="70" height="31" rx="5" fill="url(#chWood)"/>
+              <rect x="15" y="47" width="70" height="7.5" rx="3.5" fill="url(#chGold)"/>
+              <rect x="43" y="47" width="14" height="31" fill="url(#chGold)"/>
+              <rect x="15" y="72" width="70" height="6" rx="3" fill="#4d2c0d" opacity=".45"/>
+              <!-- kilit -->
+              <rect x="41" y="56" width="18" height="15" rx="4.5" fill="url(#chGold)"/>
+              <rect x="41" y="56" width="18" height="15" rx="4.5" fill="none" stroke="#8c5c07" stroke-width="1.4"/>
+              <circle cx="50" cy="62" r="2.8" fill="#6b4410"/>
+              <path d="M50 63.5 v4" stroke="#6b4410" stroke-width="2.6" stroke-linecap="round"/>
+              <!-- perçinler -->
+              <g fill="#e8c069"><circle cx="21" cy="74" r="1.9"/><circle cx="79" cy="74" r="1.9"/><circle cx="21" cy="51" r="1.6"/><circle cx="79" cy="51" r="1.6"/></g>
+              <!-- parıltı -->
+              <g fill="#fff"><circle class="ch-tw" cx="23" cy="24" r="2.8"/><circle class="ch-tw t2" cx="82" cy="32" r="2"/><circle class="ch-tw t3" cx="66" cy="14" r="1.9"/></g>
             </svg>
           </div>
-          <h3>KAZIMI 2X<br>YÜKSELT</h3>
-          <p>Kazım hızını<br>2 katına çıkar!</p>
+          <h3>ŞANS<br>KUTUSU</h3>
+          <p>Reklam izle<br>ücretsiz aç!</p>
           <span class="act-go go-blue">
             <svg viewBox="0 0 24 24"><path d="M4 11h11.2l-4.6-4.6L12 5l7 7-7 7-1.4-1.4 4.6-4.6H4Z"/></svg>
           </span>

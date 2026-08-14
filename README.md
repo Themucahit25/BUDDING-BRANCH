@@ -67,9 +67,10 @@ içindeki `GAMES` dizisine bir satır ve `openGame()` içine bir dal yeter.
   Erken çıkışta o ana kadar toplananlar yine hesaba geçer.
 - Diğer iki kutucuk `ready:false` ile kilitli görünüyor.
 
-**Pazar Yeri** — 4 kalıcı yükseltme, fiyatlar ★ cinsinden ve her seviyede üstel artıyor
-(kazma 40, matkap 200, ekip 800, tılsım 3.000 başlangıç). Satın alınan seviye
-`currentRate()` çarpanına giriyor.
+**Pazar Yeri** — şu an **boş**. Öğeler geçici olarak kapalı: `js/app.js` içindeki
+`SHOP_ENABLED` bayrağı `false`. `true` yapınca 4 kalıcı yükseltme geri geliyor
+(kazma 40, matkap 200, ekip 800, tılsım 3.000 ★, her seviyede üstel artış);
+çizim kodu ve `SHOP` dizisi olduğu gibi duruyor.
 
 ### Şu an kilitli bölümler
 
@@ -85,10 +86,15 @@ Kullanıcı **sıfırdan** başlar: hız 0, süre 0, toplam 0.
 | Buton | Etki | Kilit kuralı |
 |---|---|---|
 | **KAZIMI BAŞLAT** | Hıza `+RATE_STEP` (0,01 BB/sa) ve süreye **+12 saat** ekler, kazımı başlatır | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
-| **KAZIMI 2X YÜKSELT** | Ödüllü reklam → hızı **kalıcı olarak 2 katına** çıkarır | Kazım başlamadan kilitli; oturum başına **1 hak**, kullanınca kilitlenir |
+| **ŞANS KUTUSU** | Ödüllü reklam → kutuyu açar | **3 saatte bir** açılabilir; açıldıktan sonra gri + kilitli, kart üzerinde geri sayım |
 | **+12:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+12 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
 
-Kart kilitlendiğinde içerik gri filtreye girer ve ortaya kilit rozeti yaylanarak oturur.
+Kart kilitlendiğinde içerik gri filtreye girer ve görselin üzerine kilit rozeti yaylanarak
+oturur; başlık ve geri sayım okunur kalır.
+
+> **Şans kutusunun ödülleri henüz yok.** Şu an yalnızca açılış ve 3 saatlik bekleme
+> süresi işliyor. Ödül eklerken `actBox` dinleyicisinde `S.boxNextAt` atamasının
+> yanına ödül kodunu yazman yeterli.
 
 ### Ödüllü reklamı gerçek SDK'ya bağlama
 
@@ -134,7 +140,8 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 |---|---|---|
 | `RATE_STEP` | BAŞLAT'ın hıza eklediği BB/saat | `0.01` |
 | `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
-| `BOOST_FACTOR` | 2X yükseltmenin çarpanı | `2` |
+| `BOX_COOLDOWN_MS` | Şans kutusu bekleme süresi | 3 saat |
+| `SHOP_ENABLED` | Pazar yeri öğeleri açık mı | `false` |
 | `ADD_TIME_MS` | +12H butonunun eklediği süre | 12 saat |
 | `ADD_TIME_DAILY_MAX` | +12H günlük hak | `4` |
 | `AD_SECONDS` | Simüle reklam süresi | `5` |
