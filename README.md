@@ -33,6 +33,10 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
 ## Özellikler
 
 **Ana Sayfa**
+- **Tek ekran**: kaydırma yok. Sahne `flex:1` ile kalan dikey boşluğu doldurur,
+  diğer her şey sabit yüksekliktedir. `assets/scene.jpg` bu iş için kaynaktan
+  864x700 olarak kırpıldı (y 240..940) ve `object-position:center top` ile üste
+  sabitlendi — ekran kısaldıkça alttan kırpılır, madenci ve maden girişi hep görünür.
 - Tam genişlik maden sahnesi + üzerine bindirilmiş CSS ışık katmanları:
   yavaş ken-burns kaydırma, güneş ışını süpürmesi, fenerde titreyen alev parıltısı,
   maden girişinden sızan sıcak ışık, kristal ve altın parıltısı, yükselen toz zerrecikleri
@@ -43,10 +47,19 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
 - Kazım aktifken sahne hızlanır: tüm parıltılar 2-3x hızlanır, sahneye sıcak bir iç ışıma gelir,
   başlat kartı yeşil nabız halkası alır
 
-**Pazar Yeri** — 4 kalıcı yükseltme (kazma / matkap / ekip / tılsım), üstel fiyatlama
-**Canlı Bot** — 8 saatlik vardiya, %50 verimle sen yokken kazar
-**Görevler** — kanal/grup/X takibi, davet, seri kazım ödülleri
-**Cüzdan** — bakiye kartı, kaynak dağılımı, işlem defteri, çekim talebi
+### Şu an kilitli bölümler
+
+Pazar Yeri, Canlı Bot, Görevler ve Cüzdan sekmeleri **"YAKINDA GELİYOR"** ekranı gösteriyor.
+Kod ve arayüzleri hazır, sadece gizli:
+
+- **Pazar Yeri** — 4 kalıcı yükseltme (kazma / matkap / ekip / tılsım), üstel fiyatlama
+- **Canlı Bot** — 8 saatlik vardiya, %50 verimle sen yokken kazar
+- **Görevler** — kanal/grup/X takibi, davet, seri kazım ödülleri
+- **Cüzdan** — bakiye kartı, kaynak dağılımı, işlem defteri, çekim talebi
+
+Bir bölümü açmak için `index.html` içinde o bölümün `.soon` bloğunu sil ve
+ilgili elemandan `is-locked` sınıfını kaldır. Başka bir değişiklik gerekmiyor —
+JS tarafı zaten çalışıyor.
 **Ayarlar** — titreşim, ses, animasyon, bildirim anahtarları + sıfırlama
 
 **Motor**

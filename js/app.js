@@ -573,7 +573,10 @@
     if (!tab) return;
     document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('is-active', t === tab));
     document.querySelectorAll('.page').forEach((p) => p.classList.toggle('is-active', p.dataset.page === target));
-    document.querySelector('.pages').scrollTop = 0;
+    const pages = document.querySelector('.pages');
+    /* ana sayfa tek ekrana sığar — kaydırmayı kapat */
+    pages.classList.toggle('no-scroll', target === 'home');
+    pages.scrollTop = 0;
     if (target === 'wallet') paintLedger();
     if (target === 'tasks') paintTasks();
     if (target === 'market') { lastShopSig = ''; render(); }
@@ -714,6 +717,7 @@
     paintTasks();
     paintLedger();
     render();
+    document.querySelector('.pages').classList.add('no-scroll');
     initialTab();
 
     setInterval(tick, 1000);

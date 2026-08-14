@@ -147,19 +147,30 @@ img{display:block;max-width:100%}
 .page.is-active{display:block}
 @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
+/* ana sayfa: tek ekran — kaydırma yok, sahne kalan boşluğu doldurur */
+.pages.no-scroll{overflow:hidden}
+.page[data-page="home"].is-active{display:flex;flex-direction:column;height:100%}
+
+/* yakında gelecek bölümler gizli */
+.is-locked{display:none !important}
+
 /* ═══════════════ SAHNE ═══════════════ */
 .scene-card{
   position:relative;
   /* tam genişlik: sayfa padding'inden taşar */
   margin:0 calc(var(--pad) * -1);
-  aspect-ratio:1080/900;
+  /* kalan dikey boşluğu doldurur; resim object-fit ile her orana uyar */
+  flex:1 1 auto;
+  min-height:150px;
   overflow:hidden;
   background:#8ecbe8;
 }
 .scene-img{
   position:absolute;inset:0;
   width:100%;height:100%;
-  object-fit:cover;object-position:center 26%;
+  /* madenci + maden girişi sabit kalsın, ekran kısaldıkça alt kısım kırpılsın
+     (kesik kenarı .scene-fade kreme karıştırıyor) */
+  object-fit:cover;object-position:center top;
   animation:kenburns 26s ease-in-out infinite alternate;
 }
 @keyframes kenburns{
@@ -177,6 +188,14 @@ img{display:block;max-width:100%}
 /* ─── ışık / atmosfer katmanları ─── */
 .fx{position:absolute;pointer-events:none}
 
+/* Resmin görünen alanıyla birebir örtüşen kap: aynı en-boy oranı, alta sabit.
+   Böylece içindeki yüzdeler ekran boyu değişse de resimdeki nesnede kalır. */
+.fx-layer{
+  position:absolute;left:0;right:0;top:0;
+  aspect-ratio:864/700;
+  pointer-events:none;
+}
+
 .sun-ray{
   inset:0;
   background:linear-gradient(112deg, rgba(255,242,190,0) 30%, rgba(255,246,205,.42) 46%, rgba(255,242,190,0) 62%);
@@ -187,7 +206,7 @@ img{display:block;max-width:100%}
 
 /* fener parıltısı — resimdeki fenerin üstüne oturur */
 .lamp-glow{
-  left:81%;top:24%;width:22%;padding-bottom:22%;
+  left:84.5%;top:25%;width:22%;padding-bottom:22%;
   transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(circle, rgba(255,214,120,.85) 0%, rgba(255,186,60,.34) 38%, rgba(255,170,40,0) 70%);
   mix-blend-mode:screen;
@@ -197,7 +216,7 @@ img{display:block;max-width:100%}
 
 /* maden girişinden sızan sıcak ışık */
 .mine-pulse{
-  left:84%;top:44%;width:34%;padding-bottom:30%;
+  left:82.8%;top:43.6%;width:34%;padding-bottom:30%;
   transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(circle, rgba(255,196,90,.30) 0%, rgba(255,170,40,0) 68%);
   mix-blend-mode:screen;opacity:.5;
@@ -207,7 +226,7 @@ img{display:block;max-width:100%}
 
 /* kristal parıltısı */
 .crystal-glow{
-  left:65%;top:61%;width:16%;padding-bottom:16%;
+  left:64.2%;top:59.3%;width:16%;padding-bottom:16%;
   transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(circle, rgba(140,225,255,.8) 0%, rgba(60,170,255,.28) 40%, rgba(40,150,255,0) 70%);
   mix-blend-mode:screen;
@@ -215,7 +234,7 @@ img{display:block;max-width:100%}
 }
 /* vagondaki altın */
 .gold-glow{
-  left:83%;top:45%;width:18%;padding-bottom:14%;
+  left:82.8%;top:43%;width:18%;padding-bottom:14%;
   transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(circle, rgba(255,226,120,.7) 0%, rgba(255,196,40,0) 66%);
   mix-blend-mode:screen;
@@ -229,7 +248,7 @@ img{display:block;max-width:100%}
 }
 
 /* ─── yükselen parıltı zerrecikleri ─── */
-.motes{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.motes{position:absolute;inset:0;pointer-events:none}
 .motes i{
   position:absolute;left:var(--x);top:var(--y);
   width:5px;height:5px;border-radius:50%;
@@ -310,10 +329,10 @@ img{display:block;max-width:100%}
 
 /* ═══ TOPLAM KAZILAN BARI ═══ */
 .total-bar{
-  position:relative;z-index:6;
-  margin:-46px 8px 0;
+  position:relative;z-index:6;flex:none;
+  margin:-62px 8px 0;
   display:flex;align-items:center;gap:12px;
-  padding:11px 22px 11px 12px;border-radius:20px;
+  padding:9px 22px 9px 11px;border-radius:20px;
   background:linear-gradient(150deg,#12492a 0%, var(--forest) 55%, var(--forest-2) 100%);
   box-shadow:0 12px 26px rgba(10,30,12,.42), inset 0 0 0 2px rgba(201,162,74,.55);
   overflow:hidden;
@@ -344,10 +363,10 @@ img{display:block;max-width:100%}
 @keyframes sparkTw{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:1;transform:scale(1.2)}}
 
 /* ═══ AKSİYON KARTLARI ═══ */
-.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:14px}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px;flex:none}
 .act{
   position:relative;display:flex;flex-direction:column;align-items:center;
-  padding:14px 8px 14px;border-radius:22px;text-align:center;
+  padding:10px 6px 10px;border-radius:20px;text-align:center;
   transition:transform .16s cubic-bezier(.2,.9,.3,1), box-shadow .16s;
 }
 .act-gold{background:linear-gradient(170deg,#fee29e,#fbd583);box-shadow:0 6px 0 #e8bf6e, var(--sh-m), inset 0 0 0 1.5px rgba(255,255,255,.6)}
@@ -355,22 +374,22 @@ img{display:block;max-width:100%}
 .act-green{background:linear-gradient(170deg,#ecf2d3,#dee5bb);box-shadow:0 6px 0 #c6d0a0, var(--sh-m), inset 0 0 0 1.5px rgba(255,255,255,.7)}
 .act:active{transform:translateY(4px) scale(.975);box-shadow:0 2px 0 rgba(0,0,0,.1), var(--sh-s)}
 
-.act-art{width:70px;height:70px;margin-bottom:8px;filter:drop-shadow(0 5px 7px rgba(80,55,10,.25))}
+.act-art{width:54px;height:54px;margin-bottom:5px;filter:drop-shadow(0 4px 6px rgba(80,55,10,.25))}
 .act-gold .act-art{animation:artFloat 3s ease-in-out infinite}
 .act-blue .act-art{animation:artFloat 3s ease-in-out infinite .4s}
 .act-green .act-art{animation:artFloat 3s ease-in-out infinite .8s}
 @keyframes artFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-3deg)}}
 
-.act h3{font-size:13.5px;font-weight:800;line-height:1.15}
+.act h3{font-size:12.5px;font-weight:800;line-height:1.12}
 .act-gold h3{color:#7d4e02}
 .act-blue h3{color:#0b4a97}
 .act-green h3{color:#1f6b02}
-.act p{margin:6px 0 12px;font-size:10px;font-weight:700;line-height:1.4;color:var(--ink-2);opacity:.82}
+.act p{margin:4px 0 8px;font-size:9.5px;font-weight:700;line-height:1.35;color:var(--ink-2);opacity:.82}
 .act-go{
-  width:100%;height:32px;border-radius:999px;
+  width:100%;height:27px;border-radius:999px;
   display:grid;place-items:center;margin-top:auto;
 }
-.act-go svg{width:17px;height:17px;fill:#fff}
+.act-go svg{width:15px;height:15px;fill:#fff}
 .go-orange{background:linear-gradient(180deg,#f87a16,#eb5b01);box-shadow:0 3px 0 #c44a00, 0 5px 12px rgba(235,91,1,.35)}
 .go-blue{background:linear-gradient(180deg,#2e8cf5,#016fed);box-shadow:0 3px 0 #0155bc, 0 5px 12px rgba(1,111,237,.32)}
 .go-green{background:linear-gradient(180deg,#4caf06,#329901);box-shadow:0 3px 0 #257300, 0 5px 12px rgba(50,153,1,.32)}
@@ -384,9 +403,9 @@ img{display:block;max-width:100%}
 .act[disabled]{opacity:.5;pointer-events:none}
 
 .mini-note{
-  margin-top:13px;padding:12px 15px;border-radius:var(--r-m);
+  flex:none;margin-top:9px;padding:9px 12px;border-radius:15px;
   background:rgba(255,255,255,.62);box-shadow:inset 0 0 0 1px var(--line);
-  font-size:11.5px;font-weight:700;color:var(--ink-2);text-align:center;line-height:1.5;
+  font-size:10.5px;font-weight:700;color:var(--ink-2);text-align:center;line-height:1.45;
 }
 .mini-note b{color:var(--gold-d)}
 
@@ -394,6 +413,56 @@ img{display:block;max-width:100%}
 .head-block{padding:8px 4px 14px}
 .head-block h2{font-size:23px;font-weight:800;color:#100c07;letter-spacing:.6px}
 .head-block p{margin:4px 0 0;font-size:12px;font-weight:700;color:var(--ink-2);opacity:.85;line-height:1.5}
+
+/* ═══ YAKINDA GELİYOR ═══ */
+.soon{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:34px 24px 30px;border-radius:28px;
+  background:linear-gradient(165deg,#fffdf8,#f3e7d3);
+  box-shadow:var(--sh-m), inset 0 0 0 1px var(--line);
+}
+.soon-ring{
+  position:relative;width:104px;height:104px;margin-bottom:18px;
+  display:grid;place-items:center;
+}
+.soon-ring::before{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  border:3px dashed rgba(201,162,74,.55);
+  animation:soonSpin 14s linear infinite;
+}
+@keyframes soonSpin{to{transform:rotate(360deg)}}
+.soon-ring img{
+  width:72px;height:72px;border-radius:50%;
+  filter:drop-shadow(0 4px 12px rgba(70,50,10,.35));
+  animation:soonBob 3.4s ease-in-out infinite;
+}
+@keyframes soonBob{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.soon-emoji{
+  position:absolute;right:-2px;bottom:-2px;
+  width:38px;height:38px;border-radius:50%;font-size:19px;
+  display:grid;place-items:center;
+  background:var(--card);box-shadow:0 3px 10px rgba(80,58,26,.22), inset 0 0 0 1px var(--line);
+}
+.soon h3{
+  font-size:19px;font-weight:800;letter-spacing:1.4px;color:var(--green-d);
+}
+.soon p{
+  margin:8px 0 0;font-size:12.5px;font-weight:700;line-height:1.6;
+  color:var(--ink-2);opacity:.85;
+}
+.soon-bar{
+  width:150px;height:7px;margin-top:20px;border-radius:999px;
+  background:rgba(120,92,52,.13);overflow:hidden;
+}
+.soon-bar i{
+  display:block;width:42%;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--leaf),var(--green));
+  animation:soonSlide 1.9s ease-in-out infinite;
+}
+@keyframes soonSlide{
+  0%{transform:translateX(-110%)}
+  100%{transform:translateX(345%)}
+}
 
 /* ═══ PAZAR YERİ ═══ */
 .shop-grid{display:grid;gap:10px}
