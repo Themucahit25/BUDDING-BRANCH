@@ -279,40 +279,7 @@ img{display:block;max-width:100%}
 }
 @keyframes workGlow{0%,100%{opacity:.35}50%{opacity:1}}
 
-/* ═══ HUD KARTLARI ═══ */
-.hud{
-  position:absolute;z-index:4;
-  padding:12px 15px 11px;border-radius:20px;
-  background:rgba(253,248,239,.95);
-  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
-  box-shadow:0 10px 22px rgba(50,35,10,.28), inset 0 0 0 1.5px rgba(255,255,255,.95);
-  min-width:124px;
-}
-.hud-left{left:10px;top:50%;transform:translateY(-50%);padding-right:30px}
-.hud-right{right:10px;top:50%;transform:translateY(-50%);text-align:right;padding-left:30px}
-.hud-head{display:flex;align-items:center;gap:7px;margin-bottom:3px}
-.hud-right .hud-head{justify-content:flex-end;flex-direction:row-reverse}
-.hud-ico{width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center}
-.hud-ico svg{width:17px;height:17px}
-.ring-green{background:var(--green-l);box-shadow:inset 0 0 0 2.5px var(--green)}
-.ring-green svg{fill:var(--green-d)}
-.ring-blue{background:var(--blue-l);box-shadow:inset 0 0 0 2.5px var(--blue)}
-.ring-blue svg{fill:var(--blue-d)}
-.hud-title{font-size:10.5px;font-weight:900;letter-spacing:.7px}
-.hud-left .hud-title{color:var(--green-d)}
-.hud-right .hud-title{color:var(--blue-d)}
-.hud-value{font-family:'Baloo 2';font-size:31px;font-weight:800;line-height:1.05;color:#100c07}
-.hud-right .hud-value{font-size:23px;letter-spacing:-.4px}
 .mono{font-variant-numeric:tabular-nums}
-.hud-unit{font-size:9px;font-weight:900;letter-spacing:.8px;color:var(--muted);margin-top:2px}
-.hud-info{
-  position:absolute;top:8px;width:16px;height:16px;border-radius:50%;
-  font-size:10px;font-weight:900;font-style:italic;line-height:1;
-  color:#9c8b73;background:#f0e6d5;box-shadow:inset 0 0 0 1px rgba(140,110,60,.18);
-  display:grid;place-items:center;
-}
-.hud-left .hud-info{right:9px}
-.hud-right .hud-info{left:9px}
 
 /* uçan +BB */
 .float-layer{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
@@ -343,7 +310,7 @@ img{display:block;max-width:100%}
   animation:coinBob 3.6s ease-in-out infinite;
 }
 @keyframes coinBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3px) rotate(3deg)}}
-.total-txt{flex:1;min-width:0}
+.total-txt{flex:1;min-width:0;margin-right:4px}
 .total-label{display:block;font-size:10px;font-weight:900;letter-spacing:1.8px;color:#a9cf92}
 .total-num{display:flex;align-items:baseline;gap:6px}
 .total-num strong{
@@ -363,13 +330,32 @@ img{display:block;max-width:100%}
   animation:shine 4.5s ease-in-out infinite;
 }
 @keyframes shine{0%{left:-60%}45%,100%{left:130%}}
-.total-spark{
-  position:absolute;color:#ffe28a;font-size:11px;opacity:0;
-  animation:sparkTw 3s ease-in-out infinite;
+
+/* ─── sağ blok: üstte kalan süre, çizgi, altta kazım hızı ─── */
+.total-meta{
+  flex:none;display:flex;flex-direction:column;gap:6px;
+  padding-left:13px;
+  border-left:1px solid rgba(255,255,255,.13);
 }
-.s-a{right:16px;top:12px}
-.s-b{right:34px;bottom:12px;animation-delay:1.4s;font-size:8px}
-@keyframes sparkTw{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:1;transform:scale(1.2)}}
+.meta-row{display:flex;align-items:center;gap:7px}
+.meta-ico{width:17px;height:17px;flex:none}
+.meta-ico svg{width:17px;height:17px}
+.i-time svg{fill:#7cc2f5}
+.i-rate svg{fill:var(--leaf)}
+.meta-body{display:block;min-width:0}
+.meta-label{
+  display:block;font-size:8px;font-weight:900;letter-spacing:1px;
+  color:#9dbd8c;line-height:1.2;
+}
+.meta-body b{
+  display:flex;align-items:baseline;gap:3px;
+  font-family:'Baloo 2';font-size:15px;font-weight:800;color:#fff;line-height:1.15;
+}
+.meta-body b i{font-style:normal;font-size:9px;font-weight:900;color:var(--gold-l)}
+.meta-line{
+  height:1px;
+  background:linear-gradient(90deg,rgba(201,162,74,.55),rgba(201,162,74,.12));
+}
 
 /* ═══ AKSİYON KARTLARI ═══ */
 .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px;flex:none}
@@ -771,11 +757,13 @@ body.no-anim *{animation:none !important;transition:none !important}
   .act h3{font-size:11.5px}
   .act p{font-size:9px}
   .act-art{width:56px;height:56px}
-  .hud{min-width:0;padding:10px 12px}
-  .hud-value{font-size:25px}
-  .hud-right .hud-value{font-size:19px}
-  .total-num strong{font-size:23px}
+  .total-num strong{font-size:22px}
+  .t-tail{font-size:16px}
   .total-coin{width:38px;height:38px}
+  .total-bar{gap:9px;padding:9px 14px 9px 10px}
+  .total-meta{padding-left:10px}
+  .meta-body b{font-size:13.5px}
+  .meta-label{font-size:7.5px;letter-spacing:.7px}
   .stat-value{font-size:15px}
   .tab svg{width:21px;height:21px}
 }

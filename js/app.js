@@ -732,15 +732,6 @@
     if (want) goTab(want);
   }
 
-  /* ─────────── İpucu balonları ─────────── */
-  document.querySelectorAll('.hud-info').forEach((b) => {
-    b.addEventListener('click', (e) => {
-      e.stopPropagation();
-      haptic('light');
-      toast(b.dataset.tip, '', 'ℹ️');
-    });
-  });
-
   /* ─────────── Kayıt / yükleme ─────────── */
   let saveTimer = null;
   function save() {
