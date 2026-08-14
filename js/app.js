@@ -90,7 +90,8 @@
   /* ─────────── DOM kısayolları ─────────── */
   const $ = (id) => document.getElementById(id);
   const el = {
-    rate: $('rateValue'), timer: $('timerValue'), total: $('totalValue'),
+    rate: $('rateValue'), timer: $('timerValue'),
+    totalMain: $('totalMain'), totalTail: $('totalTail'),
     note: $('sessionNote'), floatLayer: $('floatLayer'),
     scene: document.querySelector('.scene-card'),
     actStart: $('actStart'), actBoost: $('actBoost'), actTime: $('actTime'),
@@ -110,6 +111,20 @@
   const nf0 = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 });
   const fmt = (n) => nf2.format(n);
   const fmtInt = (n) => nf0.format(n);
+
+  /* Canlı sayaç için tutarı ikiye böler: "12.345,67" + "891234"
+     Toplam 8 ondalık — kazım hızı düşük olsa bile her karede hareket görünür. */
+  function splitAmount(n) {
+    if (!isFinite(n) || n < 0) n = 0;
+    const scaled = Math.floor(n * 1e8);
+    const frac = String(scaled % 1e8).padStart(8, '0');
+    return { main: nf0.format(Math.floor(n)) + ',' + frac.slice(0, 2), tail: frac.slice(2) };
+  }
+
+  /* Küçük tutarlar için: 1'in altındaysa 8 ondalık, üstündeyse 2 */
+  function fmtSmall(n) {
+    return n >= 1 ? nf2.format(n) : n.toFixed(8).replace('.', ',');
+  }
 
   function clock(ms) {
     if (ms < 0) ms = 0;
@@ -233,47 +248,75 @@
      KAZIM MOTORU
      ═══════════════════════════════════════ */
   let floatAcc = 0;
+  let sessionEnded = false;
 
-  function tick() {
+  /* Geçen gerçek süreye göre birikim. Hem her ekran karesinde hem saniyelik
+     döngüde çağrılabilir; çift saymaz çünkü tüketilen süre S.lastTick ile
+     birlikte ilerler. 1 saatlik toplam birikim tam olarak currentRate() kadardır. */
+  function accrue() {
     const now = Date.now();
     let dt = now - S.lastTick;
-    S.lastTick = now;
-    if (dt < 0) dt = 0;
+    if (dt <= 0) { S.lastTick = now; return; }
     if (dt > 12 * HOUR) dt = 12 * HOUR;   // aşırı sıçramayı sınırla
+    S.lastTick = now;
 
-    /* aktif kazım */
     if (S.mining && S.timeLeft > 0) {
       const used = Math.min(dt, S.timeLeft);
       const gained = currentRate() * (used / HOUR);
       grant(gained, 'mine');
-      S.timeLeft -= used;
-
       floatAcc += gained;
-      if (floatAcc >= 0.05 && Math.random() < 0.06) {
-        floatGain('+' + fmt(floatAcc) + ' BB');
-        floatAcc = 0;
-      }
+      S.timeLeft -= used;
 
       if (S.timeLeft <= 0) {
         S.timeLeft = 0;
         S.mining = false;
         S.boostUsed = false;          // yeni oturumda 2X hakkı tazelenir
-        logLedger('⛏️', 'Kazım oturumu tamamlandı', 0);
-        toast('Kazım süresi doldu. Tekrar başlatabilirsin.', 'warn', '⏳');
-        haptic('warning');
+        sessionEnded = true;
       }
     }
 
-    /* bot */
     if (S.botUntil > now) {
       const g = currentRate() * BOT_EFFICIENCY * (dt / HOUR);
       grant(g, 'mine');
       S.botEarned += g;
-    } else if (S.botEarned > 0 && S.botUntil !== 0) {
+    }
+  }
+
+  /* Canlı sayaç — her karede yalnızca iki metin düğümü güncellenir */
+  function paintTotal() {
+    const a = splitAmount(S.total);
+    if (el.totalMain.textContent !== a.main) el.totalMain.textContent = a.main;
+    if (el.totalTail.textContent !== a.tail) el.totalTail.textContent = a.tail;
+  }
+
+  function frame() {
+    accrue();
+    paintTotal();
+    requestAnimationFrame(frame);
+  }
+
+  /* Saniyelik döngü: durum geçişleri + tam render */
+  function tick() {
+    accrue();
+
+    if (sessionEnded) {
+      sessionEnded = false;
+      logLedger('⛏️', 'Kazım oturumu tamamlandı', 0);
+      toast('Kazım süresi doldu. Tekrar başlatabilirsin.', 'warn', '⏳');
+      haptic('warning');
+      paintLedger();
+    }
+
+    if (S.botUntil !== 0 && S.botUntil <= Date.now() && S.botEarned > 0) {
       logLedger('🤖', 'Bot vardiyası tamamlandı', S.botEarned);
-      toast('Bot vardiyası bitti: +' + fmt(S.botEarned) + ' BB', 'ok', '🤖');
+      toast('Bot vardiyası bitti: +' + fmtSmall(S.botEarned) + ' BB', 'ok', '🤖');
       S.botEarned = 0;
       S.botUntil = 0;
+    }
+
+    if (floatAcc > 0 && S.mining && Math.random() < 0.3) {
+      floatGain('+' + fmtSmall(floatAcc) + ' BB');
+      floatAcc = 0;
     }
 
     render();
@@ -291,7 +334,7 @@
 
     el.rate.textContent = fmt(currentRate());
     el.timer.textContent = clock(S.timeLeft);
-    el.total.textContent = fmt(S.total);
+    paintTotal();
     el.walletBalance.textContent = fmt(S.total);
     el.wMine.textContent = fmt(S.fromMine);
     el.wTask.textContent = fmt(S.fromTask);
@@ -797,6 +840,7 @@
     document.querySelector('.pages').classList.add('no-scroll');
     initialTab();
 
+    requestAnimationFrame(frame);   // canlı sayaç
     setInterval(tick, 1000);
     setInterval(socialTick, 4000);
     setInterval(saveNow, 10000);

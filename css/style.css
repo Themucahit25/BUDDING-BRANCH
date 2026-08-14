@@ -346,8 +346,17 @@ img{display:block;max-width:100%}
 .total-txt{flex:1;min-width:0}
 .total-label{display:block;font-size:10px;font-weight:900;letter-spacing:1.8px;color:#a9cf92}
 .total-num{display:flex;align-items:baseline;gap:6px}
-.total-num strong{font-family:'Baloo 2';font-size:27px;font-weight:800;color:#fff;line-height:1.1;text-shadow:0 2px 6px rgba(0,0,0,.3)}
-.total-num em{font-style:normal;font-size:13px;font-weight:900;color:var(--gold-l)}
+.total-num strong{
+  font-family:'Baloo 2';font-size:27px;font-weight:800;color:#fff;line-height:1.1;
+  text-shadow:0 2px 6px rgba(0,0,0,.3);
+  font-variant-numeric:tabular-nums;   /* rakamlar oynarken genişlik sabit kalsın */
+}
+/* hızlı akan son 6 hane — daha küçük ve soluk */
+.t-tail{font-size:17px;color:#cbe0bb;opacity:.85;letter-spacing:-.2px}
+.total-num em{font-style:normal;font-size:13px;font-weight:900;color:var(--gold-l);margin-left:2px}
+/* kazım aktifken sayaç hafifçe parlasın */
+.scene-card.is-mining ~ .total-bar .t-tail{color:#ffe9a8;animation:tailGlow 1.4s ease-in-out infinite}
+@keyframes tailGlow{0%,100%{opacity:.7}50%{opacity:1}}
 .total-shine{
   position:absolute;top:0;left:-60%;width:38%;height:100%;
   background:linear-gradient(100deg,transparent,rgba(255,240,190,.20),transparent);
