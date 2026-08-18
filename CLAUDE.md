@@ -71,7 +71,7 @@ rozeti yaylanarak oturur. Açıklama satırı (`p`) daha yüksek opaklıkta bır
 | `BOX_COOLDOWN_MS` | Şans kutusu bekleme | 3 saat |
 | `ADD_TIME_MS` / `ADD_TIME_DAILY_MAX` | +7H süresi ve günlük hak | 7 saat / 4 |
 | `AD_SECONDS` | Simüle reklam süresi | 5 |
-| `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaç ondalığı / büyük puntodaki | 5 / 2 |
+| `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaç ondalığı / büyük puntodaki | 3 / 2 |
 | `LIVE_MS` | Canlı sayaç boyama aralığı | 120 ms |
 | `GAME_MS` / `GAME_POINT_PER_BB` | Oyun süresi / BB başına puan | 60 sn / 1 |
 | `SHOP_ENABLED` | Pazar yeri öğeleri açık mı | `false` |
@@ -100,6 +100,12 @@ tüketir.
 `localStorage` anahtarı **`bb_mining_state_v2`**. Kayıt: 10 sn periyot +
 sekme gizlenince + her aksiyondan sonra (250 ms debounce). Durum şeması
 değişirse anahtarı `v3`'e al, yoksa eski kayıtlar bozuk duruma yol açar.
+
+> **Sıfırlama tuzağı.** `location.reload()` çağrısı `pagehide` olayını tetikliyor,
+> o da `saveNow()` çalıştırıp silinen kaydı geri yazıyordu — sıfırlama sessizce
+> boşa gidiyordu. Çözüm: `resetting` bayrağı. `save()` ve `saveNow()` bu bayrak
+> açıkken hiçbir şey yazmıyor. Kayda yazan yeni bir yol eklersen aynı bayrağı
+> kontrol ettir.
 
 ---
 

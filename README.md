@@ -42,8 +42,8 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
   (her katman resimdeki gerçek nesnenin koordinatına oturtuldu)
 - Kazım hızı ve kalan süre, toplam kazılan barının sağında (üstte süre,
   altın ayıraç çizgi, altta hız)
-- Altın kenarlı "Toplam Kazılan BB" **canlı sayacı**: 5 ondalık, ilk 2'si büyük
-  puntoda, son 3'ü küçük ve soluk akan hanelerde. Birikim geçen gerçek süreye
+- Altın kenarlı "Toplam Kazılan BB" **canlı sayacı**: 3 ondalık, ilk 2'si büyük
+  puntoda, sonuncusu küçük ve soluk akan hanede. Birikim geçen gerçek süreye
   dayalı (`accrue()`), yani 1 saatte tam olarak kazım hızı kadar. Boyama
   `LIVE_MS` aralıklı rAF döngüsünde — sekme arka plana geçince kendiliğinden durur.
 - Uçan `+BB` efektleri
@@ -192,7 +192,7 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `ADD_TIME_MS` | +7H butonunun eklediği süre | 7 saat |
 | `ADD_TIME_DAILY_MAX` | +7H günlük hak | `4` |
 | `AD_SECONDS` | Simüle reklam süresi | `5` |
-| `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `5` / `2` |
+| `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `3` / `2` |
 | `LIVE_MS` | Canlı sayacın boyanma aralığı (ms) | `120` |
 | `GAME_MS` | Oyun süresi | 60 sn |
 | `GAME_POINT_PER_BB` | Toplanan her BB'nin puan değeri | `1` |

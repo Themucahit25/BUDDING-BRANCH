@@ -140,7 +140,7 @@
 
   /* Canlı sayaç için tutarı ikiye böler: "12.345,67" + "891"
      LIVE_HEAD kadarı büyük puntoda, kalanı küçük ve soluk akan hanelerde. */
-  const LIVE_DECIMALS = 5;   // sayaçta gösterilen toplam ondalık
+  const LIVE_DECIMALS = 3;   // sayaçta gösterilen toplam ondalık
   const LIVE_HEAD = 2;       // bunun kaçı büyük puntoda
   const LIVE_POW = Math.pow(10, LIVE_DECIMALS);
 
@@ -964,7 +964,16 @@
       yes: 'SIFIRLA', no: 'VAZGEÇ'
     });
     if (!ok) return;
-    localStorage.removeItem(SAVE_KEY);
+
+    /* Yazan her şeyi durdur — yoksa reload öncesi tetiklenen pagehide
+       eski durumu geri yazar ve sıfırlama boşa gider. */
+    resetting = true;
+    clearTimeout(saveTimer);
+    try {
+      localStorage.removeItem(SAVE_KEY);
+      localStorage.removeItem('bb_mining_state_v1');   // eski sürüm kalıntısı
+    } catch (e) { /* yut */ }
+
     location.reload();
   });
 
@@ -1010,13 +1019,20 @@
 
   /* ─────────── Kayıt / yükleme ─────────── */
   let saveTimer = null;
+  /* Sıfırlama sırasında true olur. Olmazsa reload'un tetiklediği
+     pagehide/visibilitychange, silinen kaydı hemen geri yazıyor. */
+  let resetting = false;
+
   function save() {
+    if (resetting) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
+      if (resetting) return;
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* kota dolu */ }
     }, 250);
   }
   function saveNow() {
+    if (resetting) return;
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* yut */ }
   }
 
