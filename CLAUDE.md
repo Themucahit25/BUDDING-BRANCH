@@ -46,6 +46,8 @@ kullanmıyor, `assets/` içindeki işlenmiş kopyaları kullanıyor. Silme.
 | **BB** | coin | Kazımdan, gerçek zamanlı birikir | (henüz harcama yok, arz sınırsız) |
 | **Puan** | ★ | Oyun Alanı'ndaki oyunlardan | Pazar yeri yükseltmeleri (şu an kapalı) |
 
+VIP **bilet** puanla değil **BB** ile alınıyor (`VIP_ITEMS[].price` BB cinsinden).
+
 ### Ana sayfadaki üç kart
 
 | Buton | Etki | Kilit kuralı |
@@ -67,13 +69,14 @@ rozeti yaylanarak oturur. Açıklama satırı (`p`) daha yüksek opaklıkta bır
 | Sabit | Anlamı | Şu anki değer |
 |---|---|---|
 | `INITIAL_RATE` | Başlangıç kazım gücü (BB/saat) | `0.1` |
-| `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
+| `START_TIME_MS` | BAŞLAT'ın eklediği süre | 6 saat |
 | `BOX_COOLDOWN_MS` | Şans kutusu bekleme | 3 saat |
 | `ADD_TIME_MS` / `ADD_TIME_DAILY_MAX` | +7H süresi ve günlük hak | 7 saat / 4 |
 | `AD_SECONDS` | Simüle reklam süresi | 5 |
 | `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaç ondalığı / büyük puntodaki | 3 / 2 |
 | `LIVE_MS` | Canlı sayaç boyama aralığı | 120 ms |
-| `GAME_MS` / `GAME_POINT_PER_BB` | Oyun süresi / BB başına puan | 60 sn / 1 |
+| `GAME_MS` / `GAME_POINT_PER_ITEM` | Oyun süresi / sembol başına puan | 60 sn / 1 |
+| `BOMB_CHANCE` / `BOMB_PENALTY` | Bomba olasılığı / cezası | `0.15` / `10` |
 | `SHOP_ENABLED` | Pazar yeri öğeleri açık mı | `false` |
 
 ---
@@ -114,9 +117,14 @@ değişirse anahtarı `v3`'e al, yoksa eski kayıtlar bozuk duruma yol açar.
 `GAMES` dizisi kutucukları üretir, satır başına 3 tane. Yeni oyun eklemek için:
 diziye bir satır + `openGame()` içine bir dal.
 
-**BB Yağmuru** (`bbrain`) — 60 sn, 3-2-1 geri sayımla başlar. Düşen BB'lere
+**Kripto Yağmuru** (`bbrain`) — 60 sn, 3-2-1 geri sayımla başlar. Düşen sembollere
 `pointerdown` ile dokunulur. Zorluk: doğma aralığı 620 ms → 280 ms, düşme hızı
 `prog` ile artar.
+
+Düşen nesneler `CRYPTOS` dizisinde tanımlı inline SVG'ler (BTC / ETH / SOL / XRP).
+`BOMB_CHANCE` olasılıkla bunun yerine `BOMB_SVG` bombası düşer; bombaya dokunmak
+toplananı `BOMB_PENALTY` kadar azaltır (0'ın altına inmez) ve ekranda kırmızı
+flaş + `-10` etiketi gösterir. Yeni sembol eklemek için `CRYPTOS`'a bir satır yeter.
 
 > **Önemli:** BB doğma anı `G.nextSpawn` **mutlak zaman damgasına** bağlı,
 > kare süresi biriktirmeye değil. Kare düşerse doğma hızı gerçek zamanın

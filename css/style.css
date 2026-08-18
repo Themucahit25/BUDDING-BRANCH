@@ -500,9 +500,10 @@ img{display:block;max-width:100%}
 .game-art img{width:52%;filter:drop-shadow(0 3px 8px rgba(0,0,0,.45))}
 /* düşen BB'ler — kutucuk önizlemesi */
 .game-art .drop{
-  position:absolute;width:20%;opacity:.9;
+  position:absolute;width:22%;opacity:.9;
   animation:tileDrop 2.4s linear infinite;
 }
+.game-art .drop svg{width:100%;height:100%;filter:drop-shadow(0 2px 5px rgba(0,0,0,.45))}
 .game-art .drop:nth-child(1){left:12%;animation-delay:0s}
 .game-art .drop:nth-child(2){left:66%;animation-delay:.8s}
 .game-art .drop:nth-child(3){left:40%;animation-delay:1.6s}
@@ -586,16 +587,18 @@ img{display:block;max-width:100%}
 
 .gv-area{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:manipulation}
 
-/* düşen BB */
-.bb{
+/* düşen kripto sembolü / bomba */
+.fall{
   position:absolute;top:0;left:0;
   width:54px;height:54px;
   will-change:transform;
   cursor:pointer;
 }
-.bb img{width:100%;height:100%;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
-.bb.pop{animation:bbPop .3s ease-out forwards;pointer-events:none}
-@keyframes bbPop{
+.fall svg{width:100%;height:100%;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+/* bomba biraz daha dikkat çeksin */
+.fall.is-bomb svg{filter:drop-shadow(0 0 10px rgba(255,90,60,.75)) drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+.fall.pop{animation:fallPop .3s ease-out forwards;pointer-events:none}
+@keyframes fallPop{
   0%{opacity:1}
   100%{opacity:0;transform:translate(var(--px),var(--py)) scale(1.8)}
 }
@@ -608,6 +611,14 @@ img{display:block;max-width:100%}
   0%{opacity:0;transform:translateY(0) scale(.7)}
   25%{opacity:1;transform:translateY(-10px) scale(1.1)}
   100%{opacity:0;transform:translateY(-52px) scale(.9)}
+}
+/* bomba cezası */
+.gv-plus.minus{color:#ff8a7a}
+.gv-area.boom{animation:boomFlash .32s ease-out}
+@keyframes boomFlash{
+  0%{box-shadow:inset 0 0 0 0 rgba(255,70,40,0);background:rgba(255,60,40,0)}
+  30%{box-shadow:inset 0 0 90px 10px rgba(255,70,40,.55);background:rgba(255,60,40,.16)}
+  100%{box-shadow:inset 0 0 0 0 rgba(255,70,40,0);background:rgba(255,60,40,0)}
 }
 
 /* geri sayım */

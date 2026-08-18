@@ -62,13 +62,15 @@ Oyun oyna  →  ★ puan  →  Pazar yeri yükseltmesi  →  daha yüksek kazım
 **Oyun Alanı** — satır başına 3 kutucuk. Yeni oyun eklemek için `js/app.js`
 içindeki `GAMES` dizisine bir satır ve `openGame()` içine bir dal yeter.
 
-- **BB Yağmuru** (hazır) — 60 saniye. Yukarıdan düşen BB sembollerine dokunup topla.
-  Toplanan her BB = `GAME_POINT_PER_BB` puan. Süre ilerledikçe düşme sıklığı ve hızı artar.
+- **Kripto Yağmuru** (hazır) — 60 saniye. Yukarıdan düşen **BTC / ETH / SOL / XRP**
+  sembollerine dokunup topla; her biri `GAME_POINT_PER_ITEM` puan.
+  Aralarına **bomba** karışıyor (`BOMB_CHANCE`) — bombaya dokunursan toplananın
+  `BOMB_PENALTY` kadar azalır. Süre ilerledikçe düşme sıklığı ve hızı artar.
   Erken çıkışta o ana kadar toplananlar yine hesaba geçer.
 - Diğer iki kutucuk `ready:false` ile kilitli görünüyor.
 
 **Pazar Yeri** — tek öğe var: **BİLET** (VIP). Mavi çerçeveli, parıltılı kart;
-500 ★ karşılığında alınıyor ve `S.vip.ticket` sayacını artırıyor.
+**10 BB** karşılığında alınıyor ve `S.vip.ticket` sayacını artırıyor.
 
 > Biletin **işlevi henüz tanımsız** — şu an yalnızca sayaç artıyor. Ne yapacağını
 > söylediğinde bağlarım.
@@ -90,7 +92,7 @@ Kullanıcı `INITIAL_RATE` (0,1 BB/sa) kazım gücüyle başlar; süre ve toplam
 
 | Buton | Etki | Kilit kuralı |
 |---|---|---|
-| **KAZIMI BAŞLAT** | Süreye **+12 saat** ekler ve kazımı başlatır. Kazım gücüne dokunmaz | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
+| **KAZIMI BAŞLAT** | Süreye **+6 saat** ekler ve kazımı başlatır. Kazım gücüne dokunmaz | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
 | **ŞANS KUTUSU** | Ödüllü reklam → ağırlıklı ödül (aşağıdaki tablo) | **3 saatte bir** açılabilir; açıldıktan sonra gri + kilitli, kart üzerinde geri sayım |
 | **+07:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+7 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
 
@@ -186,7 +188,7 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | Sabit | Anlamı | Varsayılan |
 |---|---|---|
 | `INITIAL_RATE` | Başlangıç kazım gücü (BB/saat) | `0.1` |
-| `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
+| `START_TIME_MS` | BAŞLAT'ın eklediği süre | 6 saat |
 | `BOX_COOLDOWN_MS` | Şans kutusu bekleme süresi | 3 saat |
 | `SHOP_ENABLED` | Pazar yeri öğeleri açık mı | `false` |
 | `ADD_TIME_MS` | +7H butonunun eklediği süre | 7 saat |
@@ -195,7 +197,8 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `3` / `2` |
 | `LIVE_MS` | Canlı sayacın boyanma aralığı (ms) | `120` |
 | `GAME_MS` | Oyun süresi | 60 sn |
-| `GAME_POINT_PER_BB` | Toplanan her BB'nin puan değeri | `1` |
+| `BOMB_CHANCE` / `BOMB_PENALTY` | Bomba olasılığı / cezası | `0.15` / `10` |
+| `GAME_POINT_PER_ITEM` | Toplanan her sembolün puan değeri | `1` |
 
 > BB arzı **sınırsız** — üst sınır yok, bu yüzden "Kalan BB" göstergesi kaldırıldı.
 > Kazım gücü sabittir: kullanıcı `INITIAL_RATE` ile başlar, BAŞLAT bunu

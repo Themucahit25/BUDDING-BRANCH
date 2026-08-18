@@ -24,7 +24,7 @@
   const HOUR = 3600 * 1000;
 
   const INITIAL_RATE = 0.1;        // kullanıcının başlangıç kazım gücü (BB/saat)
-  const START_TIME_MS = 12 * HOUR; // KAZIMI BAŞLAT her basışta eklenen süre
+  const START_TIME_MS = 6 * HOUR;  // KAZIMI BAŞLAT her basışta eklenen süre
   const BOX_COOLDOWN_MS = 3 * HOUR; // şans kutusu bekleme süresi
   const ADD_TIME_MS = 7 * HOUR;    // +7H butonunun eklediği süre
   const ADD_TIME_DAILY_MAX = 4;    // +7H günlük hak
@@ -77,7 +77,7 @@
 
   /* ─────────── Oyunlar — yeni oyun eklemek için buraya bir satır ─────────── */
   const GAMES = [
-    { id: 'bbrain', name: 'BB Yağmuru', desc: '60 SN', ready: true },
+    { id: 'bbrain', name: 'Kripto Yağmuru', desc: '60 SN', ready: true },
     { id: 'soon1',  name: 'Yakında',    desc: '—',     ready: false },
     { id: 'soon2',  name: 'Yakında',    desc: '—',     ready: false }
   ];
@@ -96,13 +96,63 @@
 
   /* ─────────── VIP öğeler — pazar yerinin en üstünde ─────────── */
   const VIP_ITEMS = [
-    { id: 'ticket', name: 'BİLET', price: 500,
+    { id: 'ticket', name: 'BİLET', price: 10,
       desc: 'Çekilişlere ve özel etkinliklere katılım hakkı verir.' }
   ];
 
-  /* Oyun ayarları */
-  const GAME_MS = 60 * 1000;   // oyun süresi
-  const GAME_POINT_PER_BB = 1; // toplanan her BB'nin puan değeri
+  /* ─────────── Oyun ayarları ─────────── */
+  const GAME_MS = 60 * 1000;      // oyun süresi
+  const GAME_POINT_PER_ITEM = 1;  // toplanan her kripto sembolünün puan değeri
+  const BOMB_CHANCE = 0.15;       // düşen nesnenin bomba olma olasılığı
+  const BOMB_PENALTY = 10;        // bombaya dokununca toplanandan düşen miktar
+
+  /* Düşen kripto sembolleri — hepsi 64x64 viewBox */
+  const CRYPTOS = [
+    { id: 'btc', svg:
+      '<circle cx="32" cy="32" r="30" fill="#f7931a"/>' +
+      '<circle cx="32" cy="32" r="30" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>' +
+      '<path d="M27 13 v38 M37 13 v38" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>' +
+      '<path d="M22 20 h13 a7 7 0 0 1 0 14 h-13 z" fill="#fff"/>' +
+      '<path d="M22 32 h15 a7.5 7.5 0 0 1 0 15 h-15 z" fill="#fff"/>' +
+      '<path d="M26 24 h9 a3 3 0 0 1 0 6 h-9 z" fill="#f7931a"/>' +
+      '<path d="M26 36 h11 a3.5 3.5 0 0 1 0 7 h-11 z" fill="#f7931a"/>' },
+    { id: 'eth', svg:
+      '<circle cx="32" cy="32" r="30" fill="#627eea"/>' +
+      '<path d="M32 9 L32 26 L45.5 32.2 Z" fill="#fff" opacity=".6"/>' +
+      '<path d="M32 9 L18.5 32.2 L32 26 Z" fill="#fff"/>' +
+      '<path d="M32 42.6 L32 55 L45.5 34.8 Z" fill="#fff" opacity=".6"/>' +
+      '<path d="M32 55 L32 42.6 L18.5 34.8 Z" fill="#fff"/>' +
+      '<path d="M32 39.9 L45.5 32.2 L32 26 Z" fill="#fff" opacity=".3"/>' +
+      '<path d="M18.5 32.2 L32 39.9 L32 26 Z" fill="#fff" opacity=".45"/>' },
+    { id: 'sol', svg:
+      '<defs><linearGradient id="solG" x1="0" y1="1" x2="1" y2="0">' +
+      '<stop offset="0%" stop-color="#9945ff"/><stop offset="100%" stop-color="#14f195"/>' +
+      '</linearGradient></defs>' +
+      '<circle cx="32" cy="32" r="30" fill="#10101c"/>' +
+      '<g fill="url(#solG)">' +
+      '<path d="M23 19 H49 L41 27 H15 Z"/>' +
+      '<path d="M15 29 H41 L49 37 H23 Z"/>' +
+      '<path d="M23 39 H49 L41 47 H15 Z"/>' +
+      '</g>' },
+    { id: 'xrp', svg:
+      '<circle cx="32" cy="32" r="30" fill="#23292f"/>' +
+      '<path d="M17 20 L32 34.5 L47 20" fill="none" stroke="#fff" stroke-width="5" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<path d="M17 44 L32 29.5 L47 44" fill="none" stroke="#fff" stroke-width="5" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/>' }
+  ];
+
+  /* Bomba — dokunulursa toplanan sayısı BOMB_PENALTY kadar düşer */
+  const BOMB_SVG =
+    '<circle cx="30" cy="38" r="21" fill="#16161b"/>' +
+    '<circle cx="30" cy="38" r="21" fill="none" stroke="#3a3a45" stroke-width="2"/>' +
+    '<ellipse cx="23" cy="31" rx="7" ry="5" fill="#4d4d5a" opacity=".75" transform="rotate(-30 23 31)"/>' +
+    '<rect x="34" y="12" width="11" height="9" rx="2.5" fill="#3a3a45" transform="rotate(22 39 16)"/>' +
+    '<path d="M44 14 q9-7 15 0" fill="none" stroke="#c98b3a" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<circle cx="59" cy="14" r="5" fill="#ffcc4d"/>' +
+    '<circle cx="59" cy="14" r="2.4" fill="#fff"/>';
+
+  const svgWrap = (inner) => '<svg viewBox="0 0 64 64">' + inner + '</svg>';
 
   const TASKS = [
     { id: 't1', ico: '📢', name: 'Telegram kanalına katıl',   reward: 500,  url: 'https://t.me/telegram' },
@@ -436,7 +486,8 @@
 
     /* mağaza yalnız değişince yeniden çizilsin */
     const sig = SHOP.map((i) => S.upgrades[i.id]).join(',') + '|' + S.points +
-                '|' + VIP_ITEMS.map((i) => S.vip[i.id] || 0).join(',');
+                '|' + VIP_ITEMS.map((i) => S.vip[i.id] || 0).join(',') +
+                '|' + Math.floor(S.total);
     if (sig !== lastShopSig) { lastShopSig = sig; paintShop(); }
   }
 
@@ -483,18 +534,19 @@
           '<span class="shop-lvl vip-lvl">SAHİP OLDUĞUN: ' + fmtInt(owned) + '</span>' +
         '</div>' +
         '<button class="shop-buy vip-buy">' +
-          '<span class="buy-price">★ ' + fmtInt(item.price) + '</span><small>PUAN</small>' +
+          '<span class="buy-price">' + fmt(item.price) + '</span><small>BB</small>' +
         '</button>';
 
       row.querySelector('.shop-buy').addEventListener('click', () => {
-        if (S.points < item.price) {
-          toast('Yetersiz puan. Gereken: ' + fmtInt(item.price) + ' ★', 'err', '⭐');
+        if (S.total < item.price) {
+          toast('Yetersiz BB. Gereken: ' + fmt(item.price) + ' BB', 'err', '🪙');
           haptic('error');
           return;
         }
-        S.points -= item.price;
+        S.total -= item.price;
+        S.fromMine -= item.price;
         S.vip[item.id] = (S.vip[item.id] || 0) + 1;
-        logLedger('🎟️', item.name + ' satın alındı · ' + fmtInt(item.price) + ' ★', 0);
+        logLedger('🎟️', item.name + ' satın alındı', -item.price);
         toast(item.name + ' senin oldu!', 'ok', '🎟️');
         haptic('success');
         lastShopSig = '';
@@ -553,9 +605,9 @@
       tile.className = 'game-tile ' + (g.ready ? 'ready' : 'locked');
 
       const art = g.ready
-        ? '<img class="drop" src="assets/coin-sm.png" alt="">' +
-          '<img class="drop" src="assets/coin-sm.png" alt="">' +
-          '<img class="drop" src="assets/coin-sm.png" alt="">'
+        ? '<span class="drop">' + svgWrap(CRYPTOS[0].svg) + '</span>' +
+          '<span class="drop">' + svgWrap(CRYPTOS[1].svg) + '</span>' +
+          '<span class="drop">' + svgWrap(CRYPTOS[3].svg) + '</span>'
         : '<span class="game-lock"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5Zm3 8H9V7a3 3 0 0 1 6 0Z"/></svg></span>';
 
       tile.innerHTML =
@@ -568,7 +620,7 @@
     });
   }
 
-  /* ─── BB Yağmuru ─── */
+  /* ─── Kripto Yağmuru ─── */
   const G = {
     on: false, raf: 0, coins: [], last: 0,
     endsAt: 0, nextSpawn: 0, collected: 0, w: 0, h: 0
@@ -576,7 +628,7 @@
 
   function openGame(id) {
     if (id !== 'bbrain') return;
-    $('gName').textContent = 'BB YAĞMURU';
+    $('gName').textContent = 'KRİPTO YAĞMURU';
     $('gameView').classList.add('open');
     $('gEnd').classList.remove('open');
     startRound();
@@ -628,10 +680,11 @@
       rot: Math.random() * 360,
       vr: (Math.random() - 0.5) * 120,
       size: size,
+      bomb: Math.random() < BOMB_CHANCE,
       el: document.createElement('span')
     };
-    c.el.className = 'bb';
-    c.el.innerHTML = '<img src="assets/coin-sm.png" alt="">';
+    c.el.className = 'fall' + (c.bomb ? ' is-bomb' : '');
+    c.el.innerHTML = svgWrap(c.bomb ? BOMB_SVG : CRYPTOS[(Math.random() * CRYPTOS.length) | 0].svg);
     c.el.addEventListener('pointerdown', (e) => { e.preventDefault(); collectCoin(c); });
     area.appendChild(c.el);
     G.coins.push(c);
@@ -640,9 +693,17 @@
   function collectCoin(c) {
     if (c.dead) return;
     c.dead = true;
-    G.collected++;
+
+    if (c.bomb) {
+      G.collected = Math.max(0, G.collected - BOMB_PENALTY);
+      haptic('error');
+      $('gArea').classList.add('boom');
+      setTimeout(() => $('gArea').classList.remove('boom'), 320);
+    } else {
+      G.collected++;
+      haptic('light');
+    }
     $('gScore').textContent = fmtInt(G.collected);
-    haptic('light');
 
     /* patlama + uçan +1 */
     c.el.style.setProperty('--px', c.x + 'px');
@@ -652,8 +713,8 @@
     setTimeout(() => el2.remove(), 320);
 
     const plus = document.createElement('span');
-    plus.className = 'gv-plus';
-    plus.textContent = '+' + GAME_POINT_PER_BB;
+    plus.className = 'gv-plus' + (c.bomb ? ' minus' : '');
+    plus.textContent = c.bomb ? '-' + BOMB_PENALTY : '+' + GAME_POINT_PER_ITEM;
     plus.style.left = c.x + 'px';
     plus.style.top = c.y + 'px';
     $('gArea').appendChild(plus);
@@ -710,7 +771,7 @@
     $('gTime').textContent = '0';
     $('gBar').style.width = '0%';
 
-    const earned = G.collected * GAME_POINT_PER_BB;
+    const earned = G.collected * GAME_POINT_PER_ITEM;
     S.points += earned;
 
     $('gEndCollected').textContent = fmtInt(G.collected);
@@ -719,7 +780,7 @@
     $('gEnd').classList.add('open');
     haptic('success');
 
-    if (earned > 0) logLedger('🎮', 'BB Yağmuru · ' + fmtInt(earned) + ' ★', 0);
+    if (earned > 0) logLedger('🎮', 'Kripto Yağmuru · ' + fmtInt(earned) + ' ★', 0);
     lastShopSig = '';
     save(); render(); paintLedger();
     bumpPoints();
@@ -941,7 +1002,7 @@
     haptic('light');
     ask({
       icon: '📘', title: 'Nasıl Oynanır?',
-      body: '1. <b>Kazımı Başlat</b> — süreye 12 saat ekler ve kazımı başlatır. ' +
+      body: '1. <b>Kazımı Başlat</b> — süreye 6 saat ekler ve kazımı başlatır. ' +
             'Kazım gücün sabittir, bu buton onu değiştirmez. Süre bitene kadar kilitli kalır.<br><br>' +
             '2. <b>Şans Kutusu</b> — reklam izle, kutunu aç. Her 3 saatte bir açılabilir.<br><br>' +
             '3. <b>+07:00H Zaman Ekle</b> — reklam izle, süreye 7 saat eklensin. ' +
