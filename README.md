@@ -116,6 +116,27 @@ return AdController.show().then(() => true, () => false);
 - Derin bağlantı: `?tab=wallet`, `#market` veya Telegram `start_param=tab_tasks` ile
   doğrudan ilgili sekme açılır
 
+## Tam ekran
+
+Mini App menü butonundan açılınca Telegram üstte bir başlık çubuğu gösteriyor,
+ana ekrandan açılınca göstermiyor. `requestFullscreen()` (Bot API 8.0) ikisini de
+tam ekrana çekiyor — `boot()` içinde çağrılıyor.
+
+Tam ekranda Telegram kendi kapat/menü butonlarını uygulamanın **üzerine** bindiriyor.
+İçeriğin altlarında kalmaması için üst boşluk şu değişkenlerden hesaplanıyor:
+
+```
+--safe-t = max( env(safe-area-inset-top),
+                --tg-safe-area-inset-top + --tg-content-safe-area-inset-top )
+```
+
+`body.tg-fs` sınıfı tam ekranken ekleniyor ve 30px'lik bir taban boşluk garantiliyor
+(içerik güvenli alanını bildirmeyen istemciler için).
+
+**Desteklemeyen istemcide** çağrı yok sayılıyor, `expand()` ile eski davranış sürüyor —
+yani Telegram 8.0 öncesi sürümlerde başlık çubuğu görünmeye devam eder. Bu istemci
+tarafı bir sınır, koddan aşılamıyor.
+
 ## Yerel test
 
 ```powershell

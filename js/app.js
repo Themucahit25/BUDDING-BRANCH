@@ -968,6 +968,20 @@
   /* ═══════════════════════════════════════
      BAŞLATMA
      ═══════════════════════════════════════ */
+  /* ─────────── Tam ekran ───────────
+     Mini App menü butonundan açılınca Telegram üstte bir başlık çubuğu
+     gösteriyor, ana ekrandan açılınca göstermiyor. requestFullscreen()
+     (Bot API 8.0) ikisini de tam ekrana çekiyor. Eski istemcilerde
+     çağrı yok sayılıyor ve expand() ile eski davranış sürüyor. */
+  function applyFullscreen() {
+    if (!TG) return;
+    try {
+      const canFs = TG.isVersionAtLeast && TG.isVersionAtLeast('8.0') && typeof TG.requestFullscreen === 'function';
+      if (canFs && !TG.isFullscreen) TG.requestFullscreen();
+      document.body.classList.toggle('tg-fs', !!TG.isFullscreen);
+    } catch (e) { /* istemci desteklemiyor */ }
+  }
+
   function boot() {
     if (TG) {
       try {
@@ -977,6 +991,19 @@
         if (TG.setBackgroundColor) TG.setBackgroundColor('#f2e5cd');
         if (TG.disableVerticalSwipes) TG.disableVerticalSwipes();
         if (TG.enableClosingConfirmation) TG.enableClosingConfirmation();
+
+        /* dinleyiciler istekten ÖNCE bağlanmalı, yoksa hızlı dönen olay kaçar */
+        if (TG.onEvent) {
+          TG.onEvent('fullscreenChanged', () => {
+            document.body.classList.toggle('tg-fs', !!TG.isFullscreen);
+          });
+          /* başarısız olursa en azından genişletilmiş kalsın */
+          TG.onEvent('fullscreenFailed', () => {
+            document.body.classList.remove('tg-fs');
+            try { TG.expand(); } catch (e) { /* yut */ }
+          });
+        }
+        applyFullscreen();
       } catch (e) { /* eski sürüm istemcisi */ }
 
       const u = TG.initDataUnsafe && TG.initDataUnsafe.user;
