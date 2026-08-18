@@ -10,7 +10,7 @@ index.html          Arayüz
 css/style.css       Tema, animasyonlar, responsive düzen
 js/app.js           Kazım motoru, Telegram köprüsü, kayıt sistemi
 serve.js            Yerel test sunucusu (node serve.js)
-assets/scene.jpg    Maden sahnesi çizimi (864x1920, alt kısmı kreme fade)
+assets/scene.jpg    Maden sahnesi çizimi (864x700, kaynaktan y=240..940 kırpıldı)
 assets/coin.png     Tree-of-life coin, dairesel kırpılmış + şeffaf (320px)
 assets/coin-sm.png  Aynı coin, küçük kullanımlar için (96px)
 ```
@@ -25,10 +25,9 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
 | `--cream` | `#faf0e3` | sayfa zemini |
 | `--card` | `#fffbf3` | kartlar |
 | `--forest` | `#0b381e` | toplam kazılan barı, cüzdan kartı |
-| `--rim` | `#c9a24a` | altın kenarlıklar |
 | `--green` | `#339701` | marka yeşili, aktif sekme |
-| `--gold` / `--orange` | `#ec9a04` / `#ec6004` | altın kartlar, başlat butonu |
-| `--blue` | `#006fec` | 2X kartı |
+| `--gold` | `#ec9a04` | altın kartlar, satın alma butonları |
+| `--blue` | `#006fec` | şans kutusu kartı |
 
 ## Özellikler
 
@@ -41,7 +40,8 @@ Coin PNG'leri kaynak `fd47066e-*.jpg` dosyasından script ile üretildi: kare k�
   yavaş ken-burns kaydırma, güneş ışını süpürmesi, fenerde titreyen alev parıltısı,
   maden girişinden sızan sıcak ışık, kristal ve altın parıltısı, yükselen toz zerrecikleri
   (her katman resimdeki gerçek nesnenin koordinatına oturtuldu)
-- Kazım hızı / kalan süre HUD kartları
+- Kazım hızı ve kalan süre, toplam kazılan barının sağında (üstte süre,
+  altın ayıraç çizgi, altta hız)
 - Altın kenarlı "Toplam Kazılan BB" **canlı sayacı**: 5 ondalık, ilk 2'si büyük
   puntoda, son 3'ü küçük ve soluk akan hanelerde. Birikim geçen gerçek süreye
   dayalı (`accrue()`), yani 1 saatte tam olarak kazım hızı kadar. Boyama
@@ -77,17 +77,18 @@ içindeki `GAMES` dizisine bir satır ve `openGame()` içine bir dal yeter.
 Görevler ve Cüzdan sekmeleri **"YAKINDA GELİYOR"** ekranı gösteriyor; arayüzleri hazır,
 `is-locked` ile gizli. Açmak için o bölümün `.soon` bloğunu sil ve `is-locked` sınıfını
 kaldır — JS tarafı zaten çalışıyor.
-**Ayarlar** — titreşim, ses, animasyon, bildirim anahtarları + sıfırlama
+
+**Ayarlar** sekmesi çalışıyor: titreşim, ses, animasyon, bildirim anahtarları + sıfırlama.
 
 ## Kazım döngüsü
 
-Kullanıcı **sıfırdan** başlar: hız 0, süre 0, toplam 0.
+Kullanıcı `INITIAL_RATE` (0,1 BB/sa) kazım gücüyle başlar; süre ve toplam 0.
 
 | Buton | Etki | Kilit kuralı |
 |---|---|---|
-| **KAZIMI BAŞLAT** | Hıza `+RATE_STEP` (0,1 BB/sa) ve süreye **+12 saat** ekler, kazımı başlatır | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
+| **KAZIMI BAŞLAT** | Süreye **+12 saat** ekler ve kazımı başlatır. Kazım gücüne dokunmaz | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
 | **ŞANS KUTUSU** | Ödüllü reklam → kutuyu açar | **3 saatte bir** açılabilir; açıldıktan sonra gri + kilitli, kart üzerinde geri sayım |
-| **+12:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+12 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
+| **+08:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+8 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
 
 Kart kilitlendiğinde içerik gri filtreye girer ve görselin üzerine kilit rozeti yaylanarak
 oturur; başlık ve geri sayım okunur kalır.
@@ -116,6 +117,13 @@ return AdController.show().then(() => true, () => false);
 - Derin bağlantı: `?tab=wallet`, `#market` veya Telegram `start_param=tab_tasks` ile
   doğrudan ilgili sekme açılır
 
+## Referans ekranı
+
+Üst bardaki kişiler butonu (zilin solunda) `#refView` tam sayfa ekranını açıyor.
+Şimdilik boş — "yakında geliyor" bloğu gösteriyor. `.screen` sınıfı tam sayfa
+alt ekran kalıbıdır (geri butonu + başlık + kaydırılabilir gövde); yeni tam sayfa
+ekranlar için aynı kalıp kullanılabilir.
+
 ## Tam ekran
 
 Mini App menü butonundan açılınca Telegram üstte bir başlık çubuğu gösteriyor,
@@ -142,7 +150,7 @@ tarafı bir sınır, koddan aşılamıyor.
 
 ```powershell
 cd c:\Users\Karaduman1\Desktop\x
-python -m http.server 8080
+node serve.js
 ```
 Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools cihaz modunu aç.
 
@@ -160,12 +168,12 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 
 | Sabit | Anlamı | Varsayılan |
 |---|---|---|
-| `RATE_STEP` | BAŞLAT'ın hıza eklediği BB/saat | `0.1` |
+| `INITIAL_RATE` | Başlangıç kazım gücü (BB/saat) | `0.1` |
 | `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
 | `BOX_COOLDOWN_MS` | Şans kutusu bekleme süresi | 3 saat |
 | `SHOP_ENABLED` | Pazar yeri öğeleri açık mı | `false` |
-| `ADD_TIME_MS` | +12H butonunun eklediği süre | 12 saat |
-| `ADD_TIME_DAILY_MAX` | +12H günlük hak | `4` |
+| `ADD_TIME_MS` | +8H butonunun eklediği süre | 8 saat |
+| `ADD_TIME_DAILY_MAX` | +8H günlük hak | `4` |
 | `AD_SECONDS` | Simüle reklam süresi | `5` |
 | `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `5` / `2` |
 | `LIVE_MS` | Canlı sayacın boyanma aralığı (ms) | `120` |
@@ -174,7 +182,8 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `BOT_MS` / `BOT_EFFICIENCY` | Bot vardiyası ve verimi | 8 saat / %50 |
 
 > BB arzı **sınırsız** — üst sınır yok, bu yüzden "Kalan BB" göstergesi kaldırıldı.
-> Ekonomi hızını ayarlamak istersen ilk bakılacak yer `RATE_STEP`.
+> Kazım gücü sabittir: kullanıcı `INITIAL_RATE` ile başlar, BAŞLAT bunu
+> değiştirmez. Güç yalnızca pazar yeri yükseltmeleriyle artar.
 
 ## Backend'e taşırken
 

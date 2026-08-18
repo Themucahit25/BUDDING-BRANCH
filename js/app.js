@@ -23,11 +23,11 @@
   /* ─────────── Sabitler (denge burada ayarlanır) ─────────── */
   const HOUR = 3600 * 1000;
 
-  const RATE_STEP = 0.1;           // KAZIMI BAŞLAT her basışta hıza eklenen BB/saat
+  const INITIAL_RATE = 0.1;        // kullanıcının başlangıç kazım gücü (BB/saat)
   const START_TIME_MS = 12 * HOUR; // KAZIMI BAŞLAT her basışta eklenen süre
   const BOX_COOLDOWN_MS = 3 * HOUR; // şans kutusu bekleme süresi
-  const ADD_TIME_MS = 12 * HOUR;   // +12H butonunun eklediği süre
-  const ADD_TIME_DAILY_MAX = 4;    // +12H günlük hak
+  const ADD_TIME_MS = 8 * HOUR;    // +8H butonunun eklediği süre
+  const ADD_TIME_DAILY_MAX = 4;    // +8H günlük hak
   const AD_SECONDS = 5;            // ödüllü reklam süresi (gerçek SDK bunu belirler)
 
   const SAVE_KEY = 'bb_mining_state_v2';
@@ -39,12 +39,12 @@
     fromTask: 0,
     fromRef: 0,
     points: 0,           // ★ puan — oyunlardan kazanılır, pazar yerinde harcanır
-    rate: 0,             // BB/saat — 0'dan başlar, her BAŞLAT ile artar
+    rate: INITIAL_RATE,  // BB/saat — sabit kazım gücü, BAŞLAT bunu değiştirmez
     mining: false,
     timeLeft: 0,         // ms
     boxNextAt: 0,        // şans kutusunun tekrar açılabileceği an
-    addTimeDay: '',      // +12H günlük sayacın tarihi
-    addTimeCount: 0,     // bugün kaç kez +12H alındı
+    addTimeDay: '',      // +8H günlük sayacın tarihi
+    addTimeCount: 0,     // bugün kaç kez +8H alındı
     upgrades: { pick: 0, drill: 0, crew: 0, luck: 0 },
     tasks: {},
     ledger: [],
@@ -375,7 +375,7 @@
       ? 'Yeni kutu<br><b class="mono">' + clock(boxWait) + '</b>'
       : 'Reklam izle<br>ücretsiz aç!';
 
-    /* ── +12H: günde ADD_TIME_DAILY_MAX hak ── */
+    /* ── +8H: günde ADD_TIME_DAILY_MAX hak ── */
     const timeLeftToday = addTimeLeftToday();
     setOff(el.actTime, timeLeftToday <= 0);
     const tP = el.actTime.querySelector('p');
@@ -705,17 +705,17 @@
   /* ═══════════════════════════════════════
      AKSİYONLAR
      ═══════════════════════════════════════ */
-  /* ── KAZIMI BAŞLAT: hıza +RATE_STEP, süreye +12sa, kazım aktif ── */
+  /* ── KAZIMI BAŞLAT: süreye +START_TIME_MS ekler ve kazımı başlatır.
+       Kazım gücüne DOKUNMAZ — güç sabittir, yalnızca yükseltmelerle artar. ── */
   el.actStart.addEventListener('click', () => {
     if (S.mining && S.timeLeft > 0) return;   // kilitli
     haptic('medium');
 
-    S.rate += RATE_STEP;
     S.timeLeft += START_TIME_MS;
     S.mining = true;
     S.lastTick = Date.now();
 
-    logLedger('⛏️', 'Kazım başlatıldı · +' + fmt(RATE_STEP) + ' BB/sa', 0);
+    logLedger('⛏️', 'Kazım başlatıldı', 0);
     toast('Kazım başladı! Saatte ' + fmt(currentRate()) + ' BB', 'ok', '⛏️');
     haptic('success');
     save(); render(); paintLedger();
@@ -748,21 +748,21 @@
     save(); render(); paintLedger();
   });
 
-  /* ── +12:00H ZAMAN EKLE: ödüllü reklam, günde ADD_TIME_DAILY_MAX kez ── */
+  /* ── +8:00H ZAMAN EKLE: ödüllü reklam, günde ADD_TIME_DAILY_MAX kez ── */
   el.actTime.addEventListener('click', async () => {
     if (addTimeLeftToday() <= 0) return;   // kilitli
     haptic('medium');
 
     const ok = await ask({
-      icon: '⏰', title: '+12 Saat Zaman Ekle',
-      body: 'Kısa bir reklam izle, kazım süresine <b>12 saat</b> eklensin.' +
+      icon: '⏰', title: '+8 Saat Zaman Ekle',
+      body: 'Kısa bir reklam izle, kazım süresine <b>8 saat</b> eklensin.' +
             '<br><br>Kalan süre: <b>' + clock(S.timeLeft) + '</b>' +
             '<br>Bugün kalan hak: <b>' + addTimeLeftToday() + ' / ' + ADD_TIME_DAILY_MAX + '</b>',
       yes: 'REKLAMI İZLE', no: 'VAZGEÇ'
     });
     if (!ok) return;
 
-    const watched = await watchRewardedAd('12 saat ekleniyor…');
+    const watched = await watchRewardedAd('8 saat ekleniyor…');
     if (!watched) {
       toast('Reklam tamamlanmadı, ödül verilmedi.', 'warn', '⚠️');
       return;
@@ -771,8 +771,8 @@
     rolloverDaily();
     S.addTimeCount++;
     S.timeLeft += ADD_TIME_MS;
-    logLedger('⏰', '+12 saat kazım süresi', 0);
-    toast('+12 saat eklendi · Toplam ' + clock(S.timeLeft), 'ok', '⏰');
+    logLedger('⏰', '+8 saat kazım süresi', 0);
+    toast('+8 saat eklendi · Toplam ' + clock(S.timeLeft), 'ok', '⏰');
     haptic('success');
     save(); render(); paintLedger();
   });
@@ -787,7 +787,15 @@
     else window.open(url, '_blank');
   }
 
-  $('btnSocial').addEventListener('click', () => { haptic('light'); shareInvite(); });
+  /* ── Referans ekranı (şimdilik boş) ── */
+  $('btnRef').addEventListener('click', () => {
+    haptic('light');
+    $('refView').classList.add('open');
+  });
+  $('refBack').addEventListener('click', () => {
+    haptic('light');
+    $('refView').classList.remove('open');
+  });
   $('btnInvite').addEventListener('click', () => {
     haptic('light');
     grant(250, 'ref', '👥', 'Davet bonusu');
@@ -828,10 +836,10 @@
     haptic('light');
     ask({
       icon: '📘', title: 'Nasıl Oynanır?',
-      body: '1. <b>Kazımı Başlat</b> — hızına +' + fmt(RATE_STEP) + ' BB/sa ve süreye 12 saat ekler, ' +
-            'kazım çalışmaya başlar. Süre bitene kadar buton kilitli kalır.<br><br>' +
+      body: '1. <b>Kazımı Başlat</b> — süreye 12 saat ekler ve kazımı başlatır. ' +
+            'Kazım gücün sabittir, bu buton onu değiştirmez. Süre bitene kadar kilitli kalır.<br><br>' +
             '2. <b>Şans Kutusu</b> — reklam izle, kutunu aç. Her 3 saatte bir açılabilir.<br><br>' +
-            '3. <b>+12:00H Zaman Ekle</b> — reklam izle, süreye 12 saat eklensin. ' +
+            '3. <b>+08:00H Zaman Ekle</b> — reklam izle, süreye 8 saat eklensin. ' +
             'Günde en fazla ' + ADD_TIME_DAILY_MAX + ' kez.',
       yes: 'ANLADIM', single: true
     });
@@ -919,6 +927,8 @@
         tasks: d.tasks || {},
         ledger: Array.isArray(d.ledger) ? d.ledger : []
       });
+      /* eski kayıtlarda hız 0'dan başlıyordu; taban gücün altına düşmesin */
+      if (!(S.rate > 0)) S.rate = INITIAL_RATE;
       return true;
     } catch (e) { return false; }
   }

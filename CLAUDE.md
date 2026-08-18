@@ -50,9 +50,13 @@ kullanmıyor, `assets/` içindeki işlenmiş kopyaları kullanıyor. Silme.
 
 | Buton | Etki | Kilit kuralı |
 |---|---|---|
-| **KAZIMI BAŞLAT** | Hıza `+RATE_STEP`, süreye `+START_TIME_MS`, kazımı başlatır | Kazım sürerken gri + kilitli; süre bitince açılır |
+| **KAZIMI BAŞLAT** | Süreye `+START_TIME_MS` ekler ve kazımı başlatır. **Kazım gücüne dokunmaz** | Kazım sürerken gri + kilitli; süre bitince açılır |
 | **ŞANS KUTUSU** | Ödüllü reklam → kutuyu açar. **Ödülleri henüz yok** | `BOX_COOLDOWN_MS` (3 saat) bekleme, kartta canlı geri sayım |
-| **+12:00H ZAMAN EKLE** | Ödüllü reklam → süreye `+ADD_TIME_MS` | Günde `ADD_TIME_DAILY_MAX` kez; ertesi gün sıfırlanır |
+| **+08:00H ZAMAN EKLE** | Ödüllü reklam → süreye `+ADD_TIME_MS` | Günde `ADD_TIME_DAILY_MAX` kez; ertesi gün sıfırlanır |
+
+**Kazım gücü sabittir.** Kullanıcı `INITIAL_RATE` ile başlar; BAŞLAT bunu
+değiştirmez. Güç yalnızca pazar yeri yükseltmeleriyle artar (`currentRate()`
+çarpanı). Eski kayıtlarda hız 0 ise `load()` içinde `INITIAL_RATE`'e çekilir.
 
 Kart kilitlenince: içerik gri filtreye girer, görselin üzerine (`top:24%`) kilit
 rozeti yaylanarak oturur. Açıklama satırı (`p`) daha yüksek opaklıkta bırakılır
@@ -62,10 +66,10 @@ rozeti yaylanarak oturur. Açıklama satırı (`p`) daha yüksek opaklıkta bır
 
 | Sabit | Anlamı | Şu anki değer |
 |---|---|---|
-| `RATE_STEP` | BAŞLAT'ın hıza eklediği BB/saat | `0.1` |
+| `INITIAL_RATE` | Başlangıç kazım gücü (BB/saat) | `0.1` |
 | `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
 | `BOX_COOLDOWN_MS` | Şans kutusu bekleme | 3 saat |
-| `ADD_TIME_MS` / `ADD_TIME_DAILY_MAX` | +12H süresi ve günlük hak | 12 saat / 4 |
+| `ADD_TIME_MS` / `ADD_TIME_DAILY_MAX` | +8H süresi ve günlük hak | 8 saat / 4 |
 | `AD_SECONDS` | Simüle reklam süresi | 5 |
 | `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaç ondalığı / büyük puntodaki | 5 / 2 |
 | `LIVE_MS` | Canlı sayaç boyama aralığı | 120 ms |
@@ -143,15 +147,22 @@ Erken çıkışta (`closeGame`) tur normal biter ve o ana kadar toplananlar veri
 |---|---|---|
 | Pazar yeri öğeleri | Boş durum kartı | `SHOP_ENABLED = true` |
 | Görevler, Cüzdan | "YAKINDA GELİYOR" ekranı | `.soon` bloğunu sil + `is-locked` sınıfını kaldır |
+| **Referans ekranı** | Boş `.screen` overlay (`#refView`) | `.soon` bloğunu içerikle değiştir |
 | Şans kutusu ödülleri | Yok | `actBox` dinleyicisinde `S.boxNextAt` atamasının yanına ekle |
 | Oyun 2 ve 3 | Kilitli kutucuk | `GAMES` içinde `ready: true` |
+
+**Referans ekranı** üst bardaki `#btnRef` (zilin solunda) ile açılıyor. `.screen`
+sınıfı tam sayfa alt ekran kalıbı — geri butonu + başlık + kaydırılabilir gövde.
+Yeni tam sayfa ekranlar için bu kalıbı kullan. `shareInvite()` hâlâ duruyor
+(görev `t4` ve cüzdandaki davet butonu kullanıyor).
 
 `SHOP` dizisi, `priceOf()` ve öğe çizim kodu duruyor — bayrak `true` olunca
 çalışır. `TASKS` dizisi ve `paintTasks()` de aynı şekilde hazır.
 
 **Kaldırılan özellikler** (geri isteniyorsa git geçmişinden alınır):
 Canlı Bot (`9063ef7` öncesi), 2X kazım yükseltmesi (`f3b582c` öncesi),
-Kalan BB / sınırlı arz (`cac52b9` öncesi).
+Kalan BB / sınırlı arz (`cac52b9` öncesi), BAŞLAT'ın güç ekleme mekaniği ve
+Sosyal butonu (`2e46a04` öncesi).
 
 ---
 
