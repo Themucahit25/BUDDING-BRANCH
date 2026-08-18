@@ -26,8 +26,8 @@
   const INITIAL_RATE = 0.1;        // kullanıcının başlangıç kazım gücü (BB/saat)
   const START_TIME_MS = 12 * HOUR; // KAZIMI BAŞLAT her basışta eklenen süre
   const BOX_COOLDOWN_MS = 3 * HOUR; // şans kutusu bekleme süresi
-  const ADD_TIME_MS = 8 * HOUR;    // +8H butonunun eklediği süre
-  const ADD_TIME_DAILY_MAX = 4;    // +8H günlük hak
+  const ADD_TIME_MS = 7 * HOUR;    // +7H butonunun eklediği süre
+  const ADD_TIME_DAILY_MAX = 4;    // +7H günlük hak
   const AD_SECONDS = 5;            // ödüllü reklam süresi (gerçek SDK bunu belirler)
 
   const SAVE_KEY = 'bb_mining_state_v2';
@@ -43,9 +43,10 @@
     mining: false,
     timeLeft: 0,         // ms
     boxNextAt: 0,        // şans kutusunun tekrar açılabileceği an
-    addTimeDay: '',      // +8H günlük sayacın tarihi
-    addTimeCount: 0,     // bugün kaç kez +8H alındı
+    addTimeDay: '',      // +7H günlük sayacın tarihi
+    addTimeCount: 0,     // bugün kaç kez +7H alındı
     upgrades: { pick: 0, drill: 0, crew: 0, luck: 0 },
+    vip: { ticket: 0 },  // VIP öğe sahiplikleri
     tasks: {},
     ledger: [],
     lastTick: Date.now(),
@@ -79,6 +80,24 @@
     { id: 'bbrain', name: 'BB Yağmuru', desc: '60 SN', ready: true },
     { id: 'soon1',  name: 'Yakında',    desc: '—',     ready: false },
     { id: 'soon2',  name: 'Yakında',    desc: '—',     ready: false }
+  ];
+
+  /* ─────────── Şans kutusu ödülleri ─────────── */
+  /* w = yüzde ağırlık; toplam 100 olmalı. kind 'bb' bakiyeye, 'rate' kazım hızına ekler. */
+  const BOX_PRIZES = [
+    { w: 50, kind: 'bb',   amount: 0.5, ico: '🪙', label: '0,5 BB' },
+    { w: 25, kind: 'bb',   amount: 1,   ico: '🪙', label: '1 BB' },
+    { w: 10, kind: 'bb',   amount: 2.5, ico: '🪙', label: '2,5 BB' },
+    { w: 5,  kind: 'bb',   amount: 7.5, ico: '💰', label: '7,5 BB' },
+    { w: 5,  kind: 'rate', amount: 0.1, ico: '⚡', label: '+0,1 BB/sa' },
+    { w: 3,  kind: 'rate', amount: 0.2, ico: '⚡', label: '+0,2 BB/sa' },
+    { w: 2,  kind: 'rate', amount: 0.5, ico: '🔥', label: '+0,5 BB/sa' }
+  ];
+
+  /* ─────────── VIP öğeler — pazar yerinin en üstünde ─────────── */
+  const VIP_ITEMS = [
+    { id: 'ticket', name: 'BİLET', price: 500,
+      desc: 'Çekilişlere ve özel etkinliklere katılım hakkı verir.' }
   ];
 
   /* Oyun ayarları */
@@ -158,6 +177,33 @@
     let mult = 1;
     SHOP.forEach((it) => { mult += it.mult * S.upgrades[it.id]; });
     return S.rate * mult;
+  }
+
+  /* ─────────── Şans kutusu yardımcıları ─────────── */
+  /* Ağırlıklı çekiliş: her ödülün w değeri kadar payı var. */
+  function pickPrize() {
+    const total = BOX_PRIZES.reduce((a, x) => a + x.w, 0);
+    let r = Math.random() * total;
+    for (const x of BOX_PRIZES) { r -= x.w; if (r < 0) return x; }
+    return BOX_PRIZES[BOX_PRIZES.length - 1];
+  }
+
+  function prizeOddsHtml() {
+    return '<div class="odds">' + BOX_PRIZES.map((x) =>
+      '<div class="odds-row">' +
+        '<span class="odds-ico">' + x.ico + '</span>' +
+        '<span class="odds-label">' + x.label + '</span>' +
+        '<b class="odds-pct">%' + x.w + '</b>' +
+      '</div>').join('') + '</div>';
+  }
+
+  function showPrize(x) {
+    $('prizeIco').textContent = x.ico;
+    $('prizeLabel').textContent = x.label;
+    $('prizeNote').textContent = x.kind === 'bb'
+      ? 'Bakiyene eklendi'
+      : 'Kazım hızın kalıcı olarak arttı';
+    $('prizeView').classList.add('open');
   }
 
   /* ─────────── Bildirimler ─────────── */
@@ -375,7 +421,7 @@
       ? 'Yeni kutu<br><b class="mono">' + clock(boxWait) + '</b>'
       : 'Reklam izle<br>ücretsiz aç!';
 
-    /* ── +8H: günde ADD_TIME_DAILY_MAX hak ── */
+    /* ── +7H: günde ADD_TIME_DAILY_MAX hak ── */
     const timeLeftToday = addTimeLeftToday();
     setOff(el.actTime, timeLeftToday <= 0);
     const tP = el.actTime.querySelector('p');
@@ -389,7 +435,8 @@
     el.pointsGames.textContent = fmtInt(S.points);
 
     /* mağaza yalnız değişince yeniden çizilsin */
-    const sig = SHOP.map((i) => S.upgrades[i.id]).join(',') + '|' + S.points;
+    const sig = SHOP.map((i) => S.upgrades[i.id]).join(',') + '|' + S.points +
+                '|' + VIP_ITEMS.map((i) => S.vip[i.id] || 0).join(',');
     if (sig !== lastShopSig) { lastShopSig = sig; paintShop(); }
   }
 
@@ -398,17 +445,66 @@
      aşağıdaki çizim kodu ve SHOP dizisi olduğu gibi duruyor. */
   const SHOP_ENABLED = false;
 
+  /* VIP bilet görseli — mavi gövde, altın kenar, yıldız + VIP */
+  const TICKET_SVG =
+    '<svg viewBox="0 0 100 100">' +
+      '<defs>' +
+        '<linearGradient id="tkBody" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0%" stop-color="#5ab4ff"/><stop offset="50%" stop-color="#1e7ce0"/>' +
+          '<stop offset="100%" stop-color="#0d47a1"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="tkGold" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#ffe895"/><stop offset="55%" stop-color="#f2b32c"/>' +
+          '<stop offset="100%" stop-color="#bd7a0c"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<path d="M12 22 H88 A4 4 0 0 1 92 26 V42 A8 8 0 0 0 92 58 V74 A4 4 0 0 1 88 78 H12 ' +
+              'A4 4 0 0 1 8 74 V58 A8 8 0 0 1 8 42 V26 A4 4 0 0 1 12 22 Z" ' +
+              'fill="url(#tkBody)" stroke="url(#tkGold)" stroke-width="3"/>' +
+      '<path d="m32 35 3.8 7.7 8.5 1.2-6.2 6 1.5 8.4-7.6-4-7.6 4 1.5-8.4-6.2-6 8.5-1.2Z" fill="url(#tkGold)"/>' +
+      '<text x="67" y="59" text-anchor="middle" font-family="Baloo 2, sans-serif" ' +
+            'font-size="25" font-weight="800" fill="#fff">VIP</text>' +
+    '</svg>';
+
   function paintShop() {
-    if (!SHOP_ENABLED) {
-      el.shopGrid.innerHTML =
-        '<div class="empty">' +
-          '<div class="empty-ico">🛒</div>' +
-          '<h4>Öğeler yakında</h4>' +
-          '<p>Pazar yeri şu an boş. Puanlarını biriktir,<br>yeni öğeler eklendiğinde harcayabilirsin.</p>' +
-        '</div>';
-      return;
-    }
     el.shopGrid.innerHTML = '';
+
+    /* ── VIP öğeler (her zaman görünür) ── */
+    VIP_ITEMS.forEach((item) => {
+      const owned = S.vip[item.id] || 0;
+      const row = document.createElement('div');
+      row.className = 'shop-item vip';
+      row.innerHTML =
+        '<div class="shop-ico vip-ico">' + TICKET_SVG + '</div>' +
+        '<div class="shop-body">' +
+          '<span class="vip-badge">VIP</span>' +
+          '<h4>' + item.name + '</h4>' +
+          '<p>' + item.desc + '</p>' +
+          '<span class="shop-lvl vip-lvl">SAHİP OLDUĞUN: ' + fmtInt(owned) + '</span>' +
+        '</div>' +
+        '<button class="shop-buy vip-buy">' +
+          '<span class="buy-price">★ ' + fmtInt(item.price) + '</span><small>PUAN</small>' +
+        '</button>';
+
+      row.querySelector('.shop-buy').addEventListener('click', () => {
+        if (S.points < item.price) {
+          toast('Yetersiz puan. Gereken: ' + fmtInt(item.price) + ' ★', 'err', '⭐');
+          haptic('error');
+          return;
+        }
+        S.points -= item.price;
+        S.vip[item.id] = (S.vip[item.id] || 0) + 1;
+        logLedger('🎟️', item.name + ' satın alındı · ' + fmtInt(item.price) + ' ★', 0);
+        toast(item.name + ' senin oldu!', 'ok', '🎟️');
+        haptic('success');
+        lastShopSig = '';
+        save(); render(); paintLedger();
+      });
+      el.shopGrid.appendChild(row);
+    });
+
+    /* ── Yükseltmeler (SHOP_ENABLED ile açılır) ── */
+    if (!SHOP_ENABLED) return;
     SHOP.forEach((item) => {
       const lvl = S.upgrades[item.id];
       const maxed = lvl >= item.max;
@@ -721,16 +817,15 @@
     save(); render(); paintLedger();
   });
 
-  /* ── ŞANS KUTUSU: ödüllü reklam, 3 saatte bir ──
-     NOT: ödüller henüz eklenmedi; şu an yalnızca açılış + bekleme süresi işliyor. */
+  /* ── ŞANS KUTUSU: ödüllü reklam, 3 saatte bir, ağırlıklı ödül ── */
   el.actBox.addEventListener('click', async () => {
     if (Date.now() < S.boxNextAt) return;   // kilitli
     haptic('medium');
 
     const ok = await ask({
       icon: '🎁', title: 'Şans Kutusu',
-      body: 'Kısa bir reklam izle, şans kutunu aç.' +
-            '<br><br>Her <b>3 saatte bir</b> açılabilir.',
+      body: 'Kısa bir reklam izle, ödülünü kap.<br>Her <b>3 saatte bir</b> açılabilir.' +
+            prizeOddsHtml(),
       yes: 'REKLAMI İZLE', no: 'VAZGEÇ'
     });
     if (!ok) return;
@@ -741,28 +836,38 @@
       return;
     }
 
+    const prize = pickPrize();
     S.boxNextAt = Date.now() + BOX_COOLDOWN_MS;
-    logLedger('🎁', 'Şans kutusu açıldı', 0);
-    toast('Şans kutusu açıldı! Ödüller yakında eklenecek.', 'ok', '🎁');
+
+    if (prize.kind === 'bb') grant(prize.amount, 'mine');
+    else S.rate += prize.amount;
+
+    logLedger('🎁', 'Şans kutusu · ' + prize.label, prize.kind === 'bb' ? prize.amount : 0);
     haptic('success');
     save(); render(); paintLedger();
+    showPrize(prize);
   });
 
-  /* ── +8:00H ZAMAN EKLE: ödüllü reklam, günde ADD_TIME_DAILY_MAX kez ── */
+  $('prizeOk').addEventListener('click', () => {
+    haptic('light');
+    $('prizeView').classList.remove('open');
+  });
+
+  /* ── +7:00H ZAMAN EKLE: ödüllü reklam, günde ADD_TIME_DAILY_MAX kez ── */
   el.actTime.addEventListener('click', async () => {
     if (addTimeLeftToday() <= 0) return;   // kilitli
     haptic('medium');
 
     const ok = await ask({
-      icon: '⏰', title: '+8 Saat Zaman Ekle',
-      body: 'Kısa bir reklam izle, kazım süresine <b>8 saat</b> eklensin.' +
+      icon: '⏰', title: '+7 Saat Zaman Ekle',
+      body: 'Kısa bir reklam izle, kazım süresine <b>7 saat</b> eklensin.' +
             '<br><br>Kalan süre: <b>' + clock(S.timeLeft) + '</b>' +
             '<br>Bugün kalan hak: <b>' + addTimeLeftToday() + ' / ' + ADD_TIME_DAILY_MAX + '</b>',
       yes: 'REKLAMI İZLE', no: 'VAZGEÇ'
     });
     if (!ok) return;
 
-    const watched = await watchRewardedAd('8 saat ekleniyor…');
+    const watched = await watchRewardedAd('7 saat ekleniyor…');
     if (!watched) {
       toast('Reklam tamamlanmadı, ödül verilmedi.', 'warn', '⚠️');
       return;
@@ -771,8 +876,8 @@
     rolloverDaily();
     S.addTimeCount++;
     S.timeLeft += ADD_TIME_MS;
-    logLedger('⏰', '+8 saat kazım süresi', 0);
-    toast('+8 saat eklendi · Toplam ' + clock(S.timeLeft), 'ok', '⏰');
+    logLedger('⏰', '+7 saat kazım süresi', 0);
+    toast('+7 saat eklendi · Toplam ' + clock(S.timeLeft), 'ok', '⏰');
     haptic('success');
     save(); render(); paintLedger();
   });
@@ -839,7 +944,7 @@
       body: '1. <b>Kazımı Başlat</b> — süreye 12 saat ekler ve kazımı başlatır. ' +
             'Kazım gücün sabittir, bu buton onu değiştirmez. Süre bitene kadar kilitli kalır.<br><br>' +
             '2. <b>Şans Kutusu</b> — reklam izle, kutunu aç. Her 3 saatte bir açılabilir.<br><br>' +
-            '3. <b>+08:00H Zaman Ekle</b> — reklam izle, süreye 8 saat eklensin. ' +
+            '3. <b>+07:00H Zaman Ekle</b> — reklam izle, süreye 7 saat eklensin. ' +
             'Günde en fazla ' + ADD_TIME_DAILY_MAX + ' kez.',
       yes: 'ANLADIM', single: true
     });
@@ -923,6 +1028,7 @@
       const d = JSON.parse(raw);
       Object.assign(S, d, {
         upgrades: Object.assign({ pick: 0, drill: 0, crew: 0, luck: 0 }, d.upgrades || {}),
+        vip: Object.assign({ ticket: 0 }, d.vip || {}),
         settings: Object.assign({ haptic: true, sound: false, anim: true, notify: true }, d.settings || {}),
         tasks: d.tasks || {},
         ledger: Array.isArray(d.ledger) ? d.ledger : []

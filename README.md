@@ -67,10 +67,14 @@ içindeki `GAMES` dizisine bir satır ve `openGame()` içine bir dal yeter.
   Erken çıkışta o ana kadar toplananlar yine hesaba geçer.
 - Diğer iki kutucuk `ready:false` ile kilitli görünüyor.
 
-**Pazar Yeri** — şu an **boş**. Öğeler geçici olarak kapalı: `js/app.js` içindeki
-`SHOP_ENABLED` bayrağı `false`. `true` yapınca 4 kalıcı yükseltme geri geliyor
-(kazma 40, matkap 200, ekip 800, tılsım 3.000 ★, her seviyede üstel artış);
-çizim kodu ve `SHOP` dizisi olduğu gibi duruyor.
+**Pazar Yeri** — tek öğe var: **BİLET** (VIP). Mavi çerçeveli, parıltılı kart;
+500 ★ karşılığında alınıyor ve `S.vip.ticket` sayacını artırıyor.
+
+> Biletin **işlevi henüz tanımsız** — şu an yalnızca sayaç artıyor. Ne yapacağını
+> söylediğinde bağlarım.
+
+4 kalıcı yükseltme (kazma / matkap / ekip / tılsım) `SHOP_ENABLED = false` ile gizli;
+`true` yapınca bilet kartının altında görünürler.
 
 ### Şu an kilitli bölümler
 
@@ -87,15 +91,28 @@ Kullanıcı `INITIAL_RATE` (0,1 BB/sa) kazım gücüyle başlar; süre ve toplam
 | Buton | Etki | Kilit kuralı |
 |---|---|---|
 | **KAZIMI BAŞLAT** | Süreye **+12 saat** ekler ve kazımı başlatır. Kazım gücüne dokunmaz | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
-| **ŞANS KUTUSU** | Ödüllü reklam → kutuyu açar | **3 saatte bir** açılabilir; açıldıktan sonra gri + kilitli, kart üzerinde geri sayım |
-| **+08:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+8 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
+| **ŞANS KUTUSU** | Ödüllü reklam → ağırlıklı ödül (aşağıdaki tablo) | **3 saatte bir** açılabilir; açıldıktan sonra gri + kilitli, kart üzerinde geri sayım |
+| **+07:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+7 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
 
 Kart kilitlendiğinde içerik gri filtreye girer ve görselin üzerine kilit rozeti yaylanarak
 oturur; başlık ve geri sayım okunur kalır.
 
-> **Şans kutusunun ödülleri henüz yok.** Şu an yalnızca açılış ve 3 saatlik bekleme
-> süresi işliyor. Ödül eklerken `actBox` dinleyicisinde `S.boxNextAt` atamasının
-> yanına ödül kodunu yazman yeterli.
+### Şans kutusu ödülleri
+
+Kutuya basınca oranlar modalda gösteriliyor, reklam bitince kazanan ödül
+"TEBRİKLER" ekranıyla açılıyor. Tablo `js/app.js` içindeki `BOX_PRIZES`:
+
+| Ödül | Şans | Etki |
+|---|---|---|
+| 0,5 BB | %50 | bakiyeye eklenir |
+| 1 BB | %25 | bakiyeye eklenir |
+| 2,5 BB | %10 | bakiyeye eklenir |
+| 7,5 BB | %5 | bakiyeye eklenir |
+| +0,1 BB/sa | %5 | kazım hızına kalıcı eklenir |
+| +0,2 BB/sa | %3 | kazım hızına kalıcı eklenir |
+| +0,5 BB/sa | %2 | kazım hızına kalıcı eklenir |
+
+Ağırlıklar (`w`) toplamı 100 olmalı. Yeni ödül eklerken diğerlerini azaltmayı unutma.
 
 ### Ödüllü reklamı gerçek SDK'ya bağlama
 
@@ -172,14 +189,13 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
 | `BOX_COOLDOWN_MS` | Şans kutusu bekleme süresi | 3 saat |
 | `SHOP_ENABLED` | Pazar yeri öğeleri açık mı | `false` |
-| `ADD_TIME_MS` | +8H butonunun eklediği süre | 8 saat |
-| `ADD_TIME_DAILY_MAX` | +8H günlük hak | `4` |
+| `ADD_TIME_MS` | +7H butonunun eklediği süre | 7 saat |
+| `ADD_TIME_DAILY_MAX` | +7H günlük hak | `4` |
 | `AD_SECONDS` | Simüle reklam süresi | `5` |
 | `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `5` / `2` |
 | `LIVE_MS` | Canlı sayacın boyanma aralığı (ms) | `120` |
 | `GAME_MS` | Oyun süresi | 60 sn |
 | `GAME_POINT_PER_BB` | Toplanan her BB'nin puan değeri | `1` |
-| `BOT_MS` / `BOT_EFFICIENCY` | Bot vardiyası ve verimi | 8 saat / %50 |
 
 > BB arzı **sınırsız** — üst sınır yok, bu yüzden "Kalan BB" göstergesi kaldırıldı.
 > Kazım gücü sabittir: kullanıcı `INITIAL_RATE` ile başlar, BAŞLAT bunu
