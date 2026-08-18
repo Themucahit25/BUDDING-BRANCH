@@ -85,7 +85,7 @@ Kullanıcı **sıfırdan** başlar: hız 0, süre 0, toplam 0.
 
 | Buton | Etki | Kilit kuralı |
 |---|---|---|
-| **KAZIMI BAŞLAT** | Hıza `+RATE_STEP` (0,01 BB/sa) ve süreye **+12 saat** ekler, kazımı başlatır | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
+| **KAZIMI BAŞLAT** | Hıza `+RATE_STEP` (0,1 BB/sa) ve süreye **+12 saat** ekler, kazımı başlatır | Kazım sürerken gri + kilitli; süre bitince tekrar açılır |
 | **ŞANS KUTUSU** | Ödüllü reklam → kutuyu açar | **3 saatte bir** açılabilir; açıldıktan sonra gri + kilitli, kart üzerinde geri sayım |
 | **+12:00H ZAMAN EKLE** | Ödüllü reklam → süreye **+12 saat** ekler | Günde en fazla **4 kez**; hak dolunca kilitlenir, ertesi gün sıfırlanır |
 
@@ -130,8 +130,9 @@ Tam ekranda Telegram kendi kapat/menü butonlarını uygulamanın **üzerine** b
                 --tg-safe-area-inset-top + --tg-content-safe-area-inset-top )
 ```
 
-`body.tg-fs` sınıfı tam ekranken ekleniyor ve 30px'lik bir taban boşluk garantiliyor
-(içerik güvenli alanını bildirmeyen istemciler için).
+`body.tg-fs` sınıfı tam ekranken ekleniyor; **25px taban** boşluk garantiliyor
+(içerik güvenli alanını bildirmeyen istemciler için) ve tasarım boşluğunu
+`--top-gap` 36px → 10px'e düşürüyor, çünkü güvenli alan zaten aşağı itiyor.
 
 **Desteklemeyen istemcide** çağrı yok sayılıyor, `expand()` ile eski davranış sürüyor —
 yani Telegram 8.0 öncesi sürümlerde başlık çubuğu görünmeye devam eder. Bu istemci
@@ -159,7 +160,7 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 
 | Sabit | Anlamı | Varsayılan |
 |---|---|---|
-| `RATE_STEP` | BAŞLAT'ın hıza eklediği BB/saat | `0.01` |
+| `RATE_STEP` | BAŞLAT'ın hıza eklediği BB/saat | `0.1` |
 | `START_TIME_MS` | BAŞLAT'ın eklediği süre | 12 saat |
 | `BOX_COOLDOWN_MS` | Şans kutusu bekleme süresi | 3 saat |
 | `SHOP_ENABLED` | Pazar yeri öğeleri açık mı | `false` |
@@ -172,8 +173,8 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `GAME_POINT_PER_BB` | Toplanan her BB'nin puan değeri | `1` |
 | `BOT_MS` / `BOT_EFFICIENCY` | Bot vardiyası ve verimi | 8 saat / %50 |
 
-> `RATE_STEP` bilinçli olarak çok düşük (12 saatlik ilk oturum ~0,12 BB verir).
-> Ekonomiyi hızlandırmak istersen ilk ayarlayacağın yer burası.
+> BB arzı **sınırsız** — üst sınır yok, bu yüzden "Kalan BB" göstergesi kaldırıldı.
+> Ekonomi hızını ayarlamak istersen ilk bakılacak yer `RATE_STEP`.
 
 ## Backend'e taşırken
 

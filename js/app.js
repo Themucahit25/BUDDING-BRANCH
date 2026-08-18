@@ -23,7 +23,7 @@
   /* ─────────── Sabitler (denge burada ayarlanır) ─────────── */
   const HOUR = 3600 * 1000;
 
-  const RATE_STEP = 0.01;          // KAZIMI BAŞLAT her basışta hıza eklenen BB/saat
+  const RATE_STEP = 0.1;           // KAZIMI BAŞLAT her basışta hıza eklenen BB/saat
   const START_TIME_MS = 12 * HOUR; // KAZIMI BAŞLAT her basışta eklenen süre
   const BOX_COOLDOWN_MS = 3 * HOUR; // şans kutusu bekleme süresi
   const ADD_TIME_MS = 12 * HOUR;   // +12H butonunun eklediği süre
@@ -31,7 +31,6 @@
   const AD_SECONDS = 5;            // ödüllü reklam süresi (gerçek SDK bunu belirler)
 
   const SAVE_KEY = 'bb_mining_state_v2';
-  const TOTAL_SUPPLY = 13300;
 
   /* ─────────── Durum — her şey 0'dan başlar ─────────── */
   const S = {
@@ -103,7 +102,7 @@
     floatLayer: $('floatLayer'),
     scene: document.querySelector('.scene-card'),
     actStart: $('actStart'), actBox: $('actBox'), actTime: $('actTime'),
-    statReg: $('statRegistered'), statAct: $('statActive'), statSup: $('statSupply'),
+    statReg: $('statRegistered'), statAct: $('statActive'),
     shopGrid: $('shopGrid'), taskList: $('taskList'), ledger: $('ledger'),
     walletBalance: $('walletBalance'), walletUser: $('walletUser'),
     wMine: $('wSrcMine'), wTask: $('wSrcTask'), wRef: $('wSrcRef'),
@@ -953,16 +952,14 @@
   }
 
   /* ─────────── Canlı sayaç (sosyal kanıt) ─────────── */
-  let regBase = 13300, actBase = 13000, supplyLeft = TOTAL_SUPPLY;
+  let regBase = 13300, actBase = 13000;
   function socialTick() {
     regBase += Math.random() < 0.35 ? 1 : 0;
     actBase += Math.round((Math.random() - 0.45) * 3);
     if (actBase > regBase) actBase = regBase;
     if (actBase < regBase - 900) actBase = regBase - 900;
-    supplyLeft = Math.max(1, supplyLeft - (Math.random() < 0.4 ? 1 : 0));
     el.statReg.textContent = fmtInt(regBase);
     el.statAct.textContent = fmtInt(actBase);
-    el.statSup.textContent = fmtInt(supplyLeft);
   }
 
   /* ═══════════════════════════════════════

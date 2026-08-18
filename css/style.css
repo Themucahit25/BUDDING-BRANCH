@@ -24,16 +24,11 @@
   --gold:#ec9a04;
   --gold-d:#c07500;
   --gold-l:#fbd98c;
-  --orange:#ec6004;
-  --orange-d:#c14a00;
 
   --blue:#006fec;
-  --blue-d:#0055b8;
-  --blue-l:#dceaff;
 
   --forest:#0b381e;
   --forest-2:#06240f;
-  --rim:#c9a24a;
 
   --red:#c0392b;
 
@@ -42,7 +37,7 @@
   --sh-m:0 6px 18px rgba(90,66,32,.13);
   --sh-l:0 14px 34px rgba(90,66,32,.20);
 
-  --r-s:12px; --r-m:18px; --r-l:24px; --r-xl:30px;
+  --r-m:18px;
   --pad:14px;
   /* tüm arayüzü aşağı kaydıran üst boşluk — tek yerden ayarlanır */
   --top-gap:36px;
@@ -61,13 +56,16 @@
 }
 
 /* Tam ekran modunda Telegram'ın yüzen kontrolleri için asgari boşluk —
-   içerik güvenli alanı bildirmeyen istemcilerde butonların altında kalmayı önler. */
+   içerik güvenli alanı bildirmeyen istemcilerde butonların altında kalmayı önler.
+   25px yalnızca TABAN; çentikli cihazlarda max() gerçek değeri seçiyor. */
 body.tg-fs{
   --safe-t:max(
     env(safe-area-inset-top,0px),
     calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px)),
-    30px
+    25px
   );
+  /* Telegram'ın güvenli alanı zaten aşağı itiyor; tasarım boşluğu küçülür */
+  --top-gap:10px;
 }
 
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -149,7 +147,8 @@ img{display:block;max-width:100%}
 .stat{flex:1;display:flex;align-items:center;gap:8px;padding:0 8px;min-width:0}
 .stat-div{width:1px;align-self:stretch;background:var(--line)}
 .stat-ico{width:30px;height:30px;flex:none;display:grid;place-items:center}
-.stat-ico.coin-img{border-radius:50%;filter:drop-shadow(0 2px 4px rgba(70,50,10,.3))}
+/* ileride doldurulacak boş istatistik slotu */
+.stat-empty{pointer-events:none}
 .i-gold{fill:var(--gold)}
 .i-green{fill:var(--green)}
 .stat-body{min-width:0}
@@ -705,28 +704,6 @@ img{display:block;max-width:100%}
 .shop-buy small{font-size:8.5px;opacity:.92;font-weight:800;letter-spacing:.5px}
 .shop-buy:active{transform:translateY(4px);box-shadow:0 0 0 var(--gold-d)}
 .shop-buy.maxed{background:linear-gradient(180deg,#c4b7a2,#a2947d);box-shadow:0 4px 0 #7f7461}
-
-/* ═══ BOT ═══ */
-.bot-panel{
-  border-radius:26px;padding:20px;
-  background:linear-gradient(165deg,#fffdf8,#f4e8d5);
-  box-shadow:var(--sh-m), inset 0 0 0 1px var(--line);
-}
-.bot-visual{display:grid;place-items:center;margin-bottom:8px}
-.bot-svg{width:136px;height:136px;animation:bob2 3s ease-in-out infinite}
-@keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.bot-ant{animation:blip 1.4s ease-in-out infinite}
-.bot-eye{animation:eyeBlink 4.2s ease-in-out infinite;transform-origin:center}
-@keyframes eyeBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.15)}}
-.bot-state{
-  text-align:center;font-family:'Baloo 2';font-size:16px;font-weight:800;letter-spacing:1.6px;
-  color:var(--muted);margin-bottom:14px;
-}
-.bot-state.on{color:var(--green-d)}
-.bot-rows{display:grid;gap:2px;margin-bottom:16px}
-.row{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px dashed var(--line);font-size:12.5px;font-weight:700;color:var(--ink-2)}
-.row:last-child{border-bottom:none}
-.row b{font-family:'Baloo 2';font-size:15px;color:#100c07;font-weight:800}
 
 /* ═══ GÖREVLER ═══ */
 .task-list{display:grid;gap:10px}
