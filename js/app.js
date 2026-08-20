@@ -102,9 +102,13 @@
 
   /* ─────────── Oyun ayarları ─────────── */
   const GAME_MS = 60 * 1000;      // oyun süresi
-  const GAME_POINT_PER_ITEM = 1;  // toplanan her kripto sembolünün puan değeri
-  const BOMB_CHANCE = 0.15;       // düşen nesnenin bomba olma olasılığı
+  const GAME_TOTAL_ITEMS = 150;   // bir turda düşen toplam nesne
+  const SPAWN_EASE = 1.35;        // 1 = sabit tempo, >1 = sona doğru hızlanır
+  const GAME_POINT_PER_ITEM = 1;  // toplanan her sembolün puan değeri
+  const BOMB_CHANCE = 0.15;       // bomba olma olasılığı
   const BOMB_PENALTY = 10;        // bombaya dokununca toplanandan düşen miktar
+  const ICE_CHANCE = 0.08;        // buz olma olasılığı
+  const FREEZE_MS = 3000;         // buza dokununca ekranın donma süresi
 
   /* Düşen kripto sembolleri — hepsi 64x64 viewBox */
   const CRYPTOS = [
@@ -151,6 +155,24 @@
     '<path d="M44 14 q9-7 15 0" fill="none" stroke="#c98b3a" stroke-width="3.5" stroke-linecap="round"/>' +
     '<circle cx="59" cy="14" r="5" fill="#ffcc4d"/>' +
     '<circle cx="59" cy="14" r="2.4" fill="#fff"/>';
+
+  /* Buz — dokununca ekrandaki her şey donar. Donan nesneler de bu sembole döner. */
+  const ICE_SVG =
+    '<circle cx="32" cy="32" r="30" fill="#cdeeff"/>' +
+    '<circle cx="32" cy="32" r="30" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2"/>' +
+    '<g stroke="#1f7fc4" stroke-width="4.5" stroke-linecap="round" fill="none">' +
+      '<path d="M32 11 V53"/>' +
+      '<path d="M13.8 21.5 L50.2 42.5"/>' +
+      '<path d="M50.2 21.5 L13.8 42.5"/>' +
+    '</g>' +
+    '<g stroke="#1f7fc4" stroke-width="3.4" stroke-linecap="round" fill="none">' +
+      '<path d="M32 19 l-5.5-5 M32 19 l5.5-5"/>' +
+      '<path d="M32 45 l-5.5 5 M32 45 l5.5 5"/>' +
+      '<path d="M20.5 25 l-7.3-.7 M20.5 25 l.7-7.3"/>' +
+      '<path d="M43.5 39 l7.3 .7 M43.5 39 l-.7 7.3"/>' +
+      '<path d="M43.5 25 l7.3-.7 M43.5 25 l-.7-7.3"/>' +
+      '<path d="M20.5 39 l-7.3 .7 M20.5 39 l.7 7.3"/>' +
+    '</g>';
 
   const svgWrap = (inner) => '<svg viewBox="0 0 64 64">' + inner + '</svg>';
 
@@ -622,8 +644,12 @@
 
   /* ─── Kripto Yağmuru ─── */
   const G = {
-    on: false, raf: 0, coins: [], last: 0,
-    endsAt: 0, nextSpawn: 0, collected: 0, w: 0, h: 0
+    on: false, raf: 0, items: [], last: 0,
+    endsAt: 0, collected: 0, w: 0, h: 0,
+    spawned: 0,        // bu turda üretilen nesne sayısı
+    frozenUntil: 0,    // donmanın biteceği an
+    freezeStart: 0,    // süren donmanın başlangıcı (0 = donmuyor)
+    frozenMs: 0        // turda toplam donarak geçen süre
   };
 
   function openGame(id) {
@@ -634,15 +660,20 @@
     startRound();
   }
 
-  function clearCoins() {
-    G.coins.forEach((c) => c.el.remove());
-    G.coins = [];
+  function clearItems() {
+    G.items.forEach((c) => c.el.remove());
+    G.items = [];
   }
 
   function startRound() {
     const area = $('gArea');
-    clearCoins();
+    clearItems();
     G.collected = 0;
+    G.spawned = 0;
+    G.frozenUntil = 0;
+    G.freezeStart = 0;
+    G.frozenMs = 0;
+    area.classList.remove('frozen');
     $('gScore').textContent = '0';
     $('gTime').textContent = Math.round(GAME_MS / 1000);
     $('gBar').style.width = '100%';
@@ -661,7 +692,6 @@
       ready.classList.add('hide');
       G.on = true;
       G.endsAt = Date.now() + GAME_MS;
-      G.nextSpawn = Date.now();
       G.last = performance.now();
       G.w = area.clientWidth;
       G.h = area.clientHeight;
@@ -670,9 +700,13 @@
     }, 700);
   }
 
-  function spawnCoin() {
+  function spawnItem() {
     const area = $('gArea');
     const size = 54;
+    const r = Math.random();
+    const kind = r < BOMB_CHANCE ? 'bomb'
+               : r < BOMB_CHANCE + ICE_CHANCE ? 'ice'
+               : 'crypto';
     const c = {
       x: 6 + Math.random() * Math.max(1, G.w - size - 12),
       y: -size,
@@ -680,28 +714,47 @@
       rot: Math.random() * 360,
       vr: (Math.random() - 0.5) * 120,
       size: size,
-      bomb: Math.random() < BOMB_CHANCE,
+      kind: kind,
       el: document.createElement('span')
     };
-    c.el.className = 'fall' + (c.bomb ? ' is-bomb' : '');
-    c.el.innerHTML = svgWrap(c.bomb ? BOMB_SVG : CRYPTOS[(Math.random() * CRYPTOS.length) | 0].svg);
-    c.el.addEventListener('pointerdown', (e) => { e.preventDefault(); collectCoin(c); });
+    c.el.className = 'fall' + (kind === 'bomb' ? ' is-bomb' : kind === 'ice' ? ' is-ice' : '');
+    c.el.innerHTML = svgWrap(
+      kind === 'bomb' ? BOMB_SVG :
+      kind === 'ice'  ? ICE_SVG  :
+      CRYPTOS[(Math.random() * CRYPTOS.length) | 0].svg);
+    c.el.addEventListener('pointerdown', (e) => { e.preventDefault(); tapItem(c); });
     area.appendChild(c.el);
-    G.coins.push(c);
+    G.items.push(c);
   }
 
-  function collectCoin(c) {
+  /* Buza dokunulunca: ekrandaki her şey donma sembolüne döner ve durur.
+     Donan bombalar zararsızlaşır — görünüşleri aynı olduğu için ayırt
+     edilemezdi, o yüzden hepsi normal buz gibi toplanabilir. */
+  function freezeAll() {
+    const now = Date.now();
+    G.freezeStart = now;
+    G.frozenUntil = now + FREEZE_MS;
+    $('gArea').classList.add('frozen');
+    G.items.forEach((it) => {
+      it.kind = 'ice';
+      it.el.className = 'fall is-ice frozen';
+      it.el.innerHTML = svgWrap(ICE_SVG);
+    });
+  }
+
+  function tapItem(c) {
     if (c.dead) return;
     c.dead = true;
 
-    if (c.bomb) {
+    if (c.kind === 'bomb') {
       G.collected = Math.max(0, G.collected - BOMB_PENALTY);
       haptic('error');
       $('gArea').classList.add('boom');
       setTimeout(() => $('gArea').classList.remove('boom'), 320);
     } else {
       G.collected++;
-      haptic('light');
+      haptic(c.kind === 'ice' ? 'success' : 'light');
+      if (c.kind === 'ice' && !c.frozenCopy) freezeAll();
     }
     $('gScore').textContent = fmtInt(G.collected);
 
@@ -713,14 +766,14 @@
     setTimeout(() => el2.remove(), 320);
 
     const plus = document.createElement('span');
-    plus.className = 'gv-plus' + (c.bomb ? ' minus' : '');
-    plus.textContent = c.bomb ? '-' + BOMB_PENALTY : '+' + GAME_POINT_PER_ITEM;
+    plus.className = 'gv-plus' + (c.kind === 'bomb' ? ' minus' : '');
+    plus.textContent = c.kind === 'bomb' ? '-' + BOMB_PENALTY : '+' + GAME_POINT_PER_ITEM;
     plus.style.left = c.x + 'px';
     plus.style.top = c.y + 'px';
     $('gArea').appendChild(plus);
     setTimeout(() => plus.remove(), 820);
 
-    G.coins = G.coins.filter((x) => x !== c);
+    G.items = G.items.filter((x) => x !== c);
   }
 
   function gameFrame(ts) {
@@ -732,33 +785,45 @@
     G.w = area.clientWidth;
     G.h = area.clientHeight;
 
-    const remain = G.endsAt - Date.now();
+    const now = Date.now();
+    const remain = G.endsAt - now;
     if (remain <= 0) { endRound(); return; }
 
+    /* süre donmada da işlemeye devam eder */
     $('gTime').textContent = Math.ceil(remain / 1000);
     $('gBar').style.width = (remain / GAME_MS * 100) + '%';
 
-    /* zorluk: süre ilerledikçe daha sık düşer.
-       Doğma anı mutlak zamana bağlı — kare düşse de hız gerçek zamanla uyumlu kalır. */
-    const prog = 1 - remain / GAME_MS;
-    const spawnEvery = 620 - prog * 340;      // 620ms → 280ms
-    const now = Date.now();
-    if (now >= G.nextSpawn) {
-      spawnCoin();
-      G.nextSpawn = now + spawnEvery;
+    /* donma bittiyse çöz */
+    const frozen = now < G.frozenUntil;
+    if (!frozen && G.freezeStart) {
+      G.frozenMs += G.frozenUntil - G.freezeStart;
+      G.freezeStart = 0;
+      area.classList.remove('frozen');
+      G.items.forEach((it) => it.el.classList.remove('frozen'));
     }
 
-    /* hareket */
-    for (let i = G.coins.length - 1; i >= 0; i--) {
-      const c = G.coins[i];
-      c.y += c.vy * dt * (1 + prog * 0.35);
-      c.rot += c.vr * dt;
-      if (c.y > G.h + c.size) {           // kaçırıldı
-        c.el.remove();
-        G.coins.splice(i, 1);
-        continue;
+    if (!frozen) {
+      /* Üretim programı: turda tam GAME_TOTAL_ITEMS nesne düşer.
+         Donarak geçen süre sayılmaz, yoksa çözülünce toplu doğma olur.
+         Mutlak zamana dayalı olduğu için kare düşmesinden etkilenmez. */
+      const activeMs = (GAME_MS - remain) - G.frozenMs;
+      const sprog = Math.max(0, Math.min(1, activeMs / GAME_MS));
+      const due = Math.round(GAME_TOTAL_ITEMS * Math.pow(sprog, SPAWN_EASE));
+      while (G.spawned < due && G.spawned < GAME_TOTAL_ITEMS) { spawnItem(); G.spawned++; }
+
+      /* hareket */
+      const prog = 1 - remain / GAME_MS;
+      for (let i = G.items.length - 1; i >= 0; i--) {
+        const c = G.items[i];
+        c.y += c.vy * dt * (1 + prog * 0.35);
+        c.rot += c.vr * dt;
+        if (c.y > G.h + c.size) {           // kaçırıldı
+          c.el.remove();
+          G.items.splice(i, 1);
+          continue;
+        }
+        c.el.style.transform = 'translate3d(' + c.x + 'px,' + c.y + 'px,0) rotate(' + c.rot + 'deg)';
       }
-      c.el.style.transform = 'translate3d(' + c.x + 'px,' + c.y + 'px,0) rotate(' + c.rot + 'deg)';
     }
 
     G.raf = requestAnimationFrame(gameFrame);
@@ -767,7 +832,8 @@
   function endRound() {
     G.on = false;
     cancelAnimationFrame(G.raf);
-    clearCoins();
+    clearItems();
+    $('gArea').classList.remove('frozen');
     $('gTime').textContent = '0';
     $('gBar').style.width = '0%';
 
@@ -790,7 +856,7 @@
     if (G.on) { endRound(); return; }   // erken çıkışta da toplananlar verilir
     G.on = false;
     cancelAnimationFrame(G.raf);
-    clearCoins();
+    clearItems();
     $('gameView').classList.remove('open');
     $('gEnd').classList.remove('open');
   }

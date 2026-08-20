@@ -62,11 +62,24 @@ Oyun oyna  →  ★ puan  →  Pazar yeri yükseltmesi  →  daha yüksek kazım
 **Oyun Alanı** — satır başına 3 kutucuk. Yeni oyun eklemek için `js/app.js`
 içindeki `GAMES` dizisine bir satır ve `openGame()` içine bir dal yeter.
 
-- **Kripto Yağmuru** (hazır) — 60 saniye. Yukarıdan düşen **BTC / ETH / SOL / XRP**
-  sembollerine dokunup topla; her biri `GAME_POINT_PER_ITEM` puan.
-  Aralarına **bomba** karışıyor (`BOMB_CHANCE`) — bombaya dokunursan toplananın
-  `BOMB_PENALTY` kadar azalır. Süre ilerledikçe düşme sıklığı ve hızı artar.
+- **Kripto Yağmuru** (hazır) — 60 saniyede tam **150 nesne** düşer.
+  Süre ilerledikçe düşme sıklığı ve hızı artar (`SPAWN_EASE` eğrisi).
   Erken çıkışta o ana kadar toplananlar yine hesaba geçer.
+
+  | Nesne | Oran | Dokununca |
+  |---|---|---|
+  | **BTC / ETH / SOL / XRP** | ~%77 | +`GAME_POINT_PER_ITEM` puan |
+  | **Bomba** 💣 | `BOMB_CHANCE` (%15) | Toplanan `BOMB_PENALTY` (10) azalır, 0'ın altına inmez |
+  | **Buz** ❄️ | `ICE_CHANCE` (%8) | Ekrandaki **her şey donar** |
+
+  **Buz nasıl çalışıyor:** Dokunulduğu anda ekrandaki tüm nesneler donma
+  sembolüne dönüşüp durur, `FREEZE_MS` (3 sn) boyunca **yeni nesne gelmez**
+  ama **süre işlemeye devam eder**. Donan nesneler hâlâ toplanabilir; aralarındaki
+  bombalar zararsızlaşır (görünüşleri aynı olduğu için ayırt edilemezdi).
+
+  > Donarak geçen süre üretim programından düşülüyor, yoksa çözülme anında
+  > toplu nesne yağardı. Bu yüzden buz kullanılan turlarda toplam 150'nin
+  > biraz altında kalır.
 - Diğer iki kutucuk `ready:false` ile kilitli görünüyor.
 
 **Pazar Yeri** — tek öğe var: **BİLET** (VIP). Mavi çerçeveli, parıltılı kart;
@@ -197,7 +210,9 @@ Sonra tarayıcıda `http://localhost:8080` — mobil görünüm için DevTools c
 | `LIVE_DECIMALS` / `LIVE_HEAD` | Sayaçtaki ondalık / büyük puntoda gösterilen | `3` / `2` |
 | `LIVE_MS` | Canlı sayacın boyanma aralığı (ms) | `120` |
 | `GAME_MS` | Oyun süresi | 60 sn |
+| `GAME_TOTAL_ITEMS` / `SPAWN_EASE` | Turdaki toplam nesne / hızlanma eğrisi | `150` / `1.35` |
 | `BOMB_CHANCE` / `BOMB_PENALTY` | Bomba olasılığı / cezası | `0.15` / `10` |
+| `ICE_CHANCE` / `FREEZE_MS` | Buz olasılığı / donma süresi | `0.08` / 3 sn |
 | `GAME_POINT_PER_ITEM` | Toplanan her sembolün puan değeri | `1` |
 
 > BB arzı **sınırsız** — üst sınır yok, bu yüzden "Kalan BB" göstergesi kaldırıldı.
